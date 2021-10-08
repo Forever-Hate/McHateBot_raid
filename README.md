@@ -16,7 +16,7 @@
 
 **如不會使用，歡迎私訊我DC:I-love-minecraft#2437**<br>
 **如有想新增的功能 or Bug，歡迎使用[issue](https://github.com/Forever-Hate/McHateBot_2/issues)**<br>
-**使用說明 & wiki:[維基](https://github.com/Forever-Hate/McHateBot_2)/wiki)**
+**使用說明 & wiki:[維基](https://github.com/Forever-Hate/McHateBot_2/wiki)**
 
 
 
