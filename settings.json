@@ -1,0 +1,6 @@
+{
+  "attack": true,
+  "health": false,
+  "mob_list": ["witch","vindicator","vex","pillager","evoker"],
+  "Interval": "250"
+}
