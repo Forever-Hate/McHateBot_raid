@@ -1,0 +1,45 @@
+{
+  "LOADING_DONE": "【McHatebot】 載入完成",
+  "SHUTDOWN": "正在關閉bot中...",
+
+  "NEED_MORE_CONTENT": "請輸入更多宣傳文字再使用此指令",
+  "NEXT_INDEX":"切換至第${trade_content_index}組宣傳文字",
+  "CONTENT":"內容:${trade_content}",
+
+  "DETECT_INTERRUPT_MSG_DC_PREFIX": ":scream:${username}",
+  "DETECT_INTERRUPT_MSG_DC_STEM": "無指定攻擊生物",
+  "DETECT_INTERRUPT_MSG_GAME_STEM": "無指定攻擊生物",
+
+  "DETECT_BROADCAST_MSG_PREFIX": "領地廣播",
+  "DISCARD_MSG": "清垃圾!!",
+
+  "EXP": "等級: ${level} 總經驗值: ${points} 百分比: ${percent}%",
+  "HELP": "請至網頁上查詢相關指令",
+  "V": "當前bot版本為:${version}",
+  "ABOUT": ["bot: [McHateBot] 突襲機器人","作者DC: ${author_dc}","遊戲ID: ${author_id}","有任何問題或回饋歡迎私訊我"],
+
+  "EXCHANGE_NO_PLAYER_ERROR": "需要距離我10格內才能執行此指令，請TP過來",
+  "EXCHANGE_INVALID_POSITION_ERROR": "未知的物品座標:${coordinate}",
+  "EXCHANGE_FORMAT_ERROR": "輸入格式錯誤! 格式為:exchange 座標",
+  "EXCHANGE_START": "開始兌換:${item}",
+  "EXCHANGE_STOP": "已停止兌換${item} 已兌換${frequency}次，尚可兌換${amount}次",
+  "EXCHANGE_BACKPACK_IS_FULL_ERROR": "背包已滿",
+
+  "REPLIED": "已回覆訊息",
+  "NO_ONE_REPLIED": "目前沒有需要回覆的人",
+  "OFFLINE": "${forward_ID}不在線上",
+  "FORWARD_TO_DC": "正在將您的訊息發送至DC",
+  "FORWARDED_IN_GAME": "${player}發送訊息",
+
+  "DC_BANNER": "==============================================================",
+  "DC_BOT_ONLINE": "   Discord bot 已上線 使用者名稱為: ${name}!",
+  "DC_BOT_OFFLINE": "   Discord bot 上線失敗! 失敗原因:${error}",
+  "DC_USER_FOUND": "                   已找到指定的DC使用者",
+  "DC_USER_NOT_FOUND": "                   找不到指定的DC使用者",
+  "DC_FORWARD_CHANNEL_NOT_FOUND": "未找到指定頻道",
+  "DC_COMMAND_EXECUTED": "指令已執行",
+  "DC_NO_MATCH_COMMAND":"找不到符合的指令${command}",
+  "DC_REPLIED_MSG": "正在將您的訊息發送給${reply_id}",
+  "DC_RESPONSE_MSG": "已回覆訊息給${reply_id}"
+
+}
