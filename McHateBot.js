@@ -9,7 +9,7 @@ try {
     const tokens = require('prismarine-tokens-fixed');  //讀取prismarine-tokens-fixed(驗證緩存)模塊
     const mineflayer = require('mineflayer');  //讀取mineflayer模塊
     const discard = require("./utils/discarditem")(localization, settings)
-    const discord = require("./commands/ communicate/dc")(localization, settings)
+    const discord = require("./commands/communicate/dc")(localization, settings)
     const raid = require('./commands/main/Raid')(discord, localization, settings)
     const publicity = require("./commands/publicity/announcement")(localization)
     const Inquire = require("./commands/main/Inquire")(localization)
