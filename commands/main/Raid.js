@@ -1,39 +1,34 @@
-const check_list = []
+let no_mob = true
 let username
 let map = new Map()
 module.exports = function (discord,local,settings){
-    this.mob_list = settings.mob_list
+    const mob_list = (settings.mob_list)
     initMap()
     this.hit = function (bot) {
         username = bot.username
-        this.attackInterval = setInterval( () => {
-            check_list.length = 0
+        this.attackInterval = setInterval( async () => {
+            no_mob = true
             for(let mobentity in bot.entities)
             {
                 if(bot.entities[mobentity].type === 'mob')
                 {
-                    if(this.mob_list.includes(bot.entities[mobentity].name) && bot.entities[mobentity].isValid && bot.entities[mobentity].health !== 0
-                        && bot.entity.position.distanceTo(bot.entities[mobentity].position) <= 6) //攻擊距離最大 = 6
+                    if(mob_list.includes(bot.entities[mobentity].name) && bot.entity.position.distanceTo(bot.entities[mobentity].position) <= 6) //攻擊距離最大 = 6
                     {
-                        bot.attack(bot.entities[mobentity],false)
-                        check_list.push(true)
+                        await bot.attack(bot.entities[mobentity],false)
+                        if(no_mob)
+                        {
+                            no_mob = false
+                        }
                     }
-                }
-                else
-                {
-                    continue
                 }
             }
         }, settings.Interval)
-        //console.log(attackInterval._destroyed)
-        //clearInterval(attackInterval)
-        //console.log(attackInterval._destroyed)
     }
 
     this.detect_interruption = function (bot) {
         let exp = 0
-        this.no_raid_interval = setInterval( () => {
-            if (check_list.length === 0 && exp === bot.experience.points) {
+        this.no_raid_interval = setInterval( async () => {
+            if (no_mob && exp === bot.experience.points) {
                 if (settings.enable_discord_bot) {
                     discord.send(get_content("DETECT_INTERRUPT_MSG_DC_PREFIX"),get_content("DETECT_INTERRUPT_MSG_DC_STEM"))
                 }

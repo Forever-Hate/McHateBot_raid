@@ -6,10 +6,10 @@ let dict = new Map()
 module.exports = function (local){
     initMap()
     this.start = function (bot,settings){
-        this.announcementInterval = setInterval( function () {
+        this.announcementInterval = setInterval( async function () {
             trade_content = settings.trade_content[trade_content_index] //初始化宣傳文字
             trade_content.forEach((c,index)=>{
-                setTimeout(()=>{
+                setTimeout(async ()=>{
                     bot.chat(`${c}`)
                 },500*(index+1))
             })
