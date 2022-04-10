@@ -3,7 +3,7 @@
 突襲Bot
 ---------------------------------------------------
 **專門為廢土伺服器所製作**
-[#**點我前往下載McHateBot**](https://github.com/Forever-Hate/McHateBot_2/releases)<br>
+[#**點我前往下載McHateBot**](https://github.com/Forever-Hate/McHateBot_raid/releases)<br>
 ## 主要特色、功能
 ```
 1.可以透過私訊Bot來執行命令(須設定白名單)  
@@ -15,8 +15,8 @@
 此bot是以[McSngbot](https://github.com/SiongSng/McSngbot)加以製作而成
 
 **如不會使用，歡迎私訊我DC:I-love-minecraft#2437**<br>
-**如有想新增的功能 or Bug，歡迎使用[issue](https://github.com/Forever-Hate/McHateBot_2/issues)**<br>
-**使用說明 & wiki:[維基](https://github.com/Forever-Hate/McHateBot_2/wiki)**
+**如有想新增的功能 or Bug，歡迎使用[issue](https://github.com/Forever-Hate/McHateBot_raid/issues)**<br>
+**使用說明 & wiki:[維基](https://github.com/Forever-Hate/McHateBot_raid/wiki)**
 
 
 
