@@ -101,10 +101,13 @@ try {
                                 Inquire.experience(bot, playerid)
                                 break;
                             case "exchange":
-                                await exchange.exchange_item(bot, playerid, ...args)
+                                await exchange.exchange_item(bot, playerid, args)
                                 break
                             case "stop":
                                 await exchange.stop(bot, playerid)
+                                break
+                            case "item":
+                                await exchange.inquire(bot, playerid, args)
                                 break
                             case "sword":
                                 raid.sword(bot)

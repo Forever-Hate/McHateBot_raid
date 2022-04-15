@@ -1,14 +1,16 @@
 let exchange_map = new Map()
 let map = new Map()
-let exchange_frequency
-let exchange_amount
+let exchange_frequency = 0
+let exchange_amount = 0
 let exchanged_item = undefined
+let exchange_sets = 0
+let exchange_quantity = 0
 let current_window
 let position
 const Item = require("prismarine-item")('1.18.2')
 module.exports = function (local, discard, settings, log) {
     initMap()
-    this.exchange_item = async function (bot, playerid, ...args) {
+    this.exchange_item = async function (bot, playerid, args) {
         if (args.length === 2) {
             discard.d()
             position = args[1]
@@ -89,8 +91,42 @@ module.exports = function (local, discard, settings, log) {
         clearInterval(this.exchangeInterval)
     }
 
+    this.inquire = async function (bot,playerid,args)
+    {
+        if (args.length === 2) {
+            position = args[1]
+            exchanged_item = exchange_map.get(position)
+            if (exchanged_item) {
+                if(exchanged_item.count !== 0)
+                {
+                    exchange_amount = get_exchange_amount(bot, exchanged_item)
+                    exchange_sets = Math.floor(exchange_amount * exchanged_item.count / 64)
+                    exchange_quantity = exchange_amount * exchanged_item.count % 64
+                    bot.chat(`/m ${playerid} ${await get_content("EXCHANGE_ITEM_INQUIRE")}`)
+                }
+                else
+                {
+                    exchange_amount = get_exchange_amount(bot, exchanged_item)
+                    bot.chat(`/m ${playerid} ${await get_content("EXCHANGE_NO_ITEM_INQUIRE")}`)
+                }
+            } else {
+                bot.chat(`/m ${playerid} ${await get_content("EXCHANGE_INVALID_POSITION_ERROR")}`)
+            }
+            exchanged_item = undefined
+            exchange_sets = 0
+            exchange_quantity = 0
+        } else {
+            bot.chat(`/m ${playerid} ${await get_content("EXCHANGE_INQUIRE_FORMAT_ERROR")}`)
+        }
+    }
     async function get_content(path) {
-        return local.get_content(path, map, position, exchange_frequency, exchange_amount, exchanged_item ? exchanged_item.i.name : "")
+        return local.get_content(path, map, position, formatThousandths(exchange_frequency), formatThousandths(exchange_amount), exchanged_item ? exchanged_item.i.name : ""
+        ,formatThousandths(exchange_sets),exchange_quantity)
+    }
+
+    function formatThousandths(number){
+        let comma=/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g
+        return number.toString().replace(comma, ',')
     }
     return this
 }
@@ -150,6 +186,8 @@ function initMap() {
     map.set("1", "frequency")
     map.set("2", "amount")
     map.set("3", "item")
+    map.set("4","set")
+    map.set("5","quantity")
 }
 
 function get_window(bot, category) {

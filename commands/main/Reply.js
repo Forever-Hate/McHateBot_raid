@@ -133,7 +133,7 @@ module.exports = function (local,discord,settings,sd){
     }
     function get_content(path)
     {
-        return local.get_content(path,map,settings.forward_id,reply_id)
+        return local.get_content(path,map,settings.forward_ID,reply_id)
     }
     function initMap(){
         map.set("0","forward_id")

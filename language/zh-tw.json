@@ -24,10 +24,13 @@
   "EXCHANGE_START": "開始兌換:${item}",
   "EXCHANGE_STOP": "已停止兌換${item} 已兌換${frequency}次，尚可兌換${amount}次",
   "EXCHANGE_BACKPACK_IS_FULL_ERROR": "背包已滿",
+  "EXCHANGE_INQUIRE_FORMAT_ERROR": "輸入格式錯誤! 格式為:item 座標",
+  "EXCHANGE_ITEM_INQUIRE": "物品:${item}，可兌換${set}組又${quantity}個(${amount}次)",
+  "EXCHANGE_NO_ITEM_INQUIRE": "物品:${item}，可兌換${amount}次",
 
   "REPLIED": "已回覆訊息",
   "NO_ONE_REPLIED": "目前沒有需要回覆的人",
-  "OFFLINE": "${forward_ID}不在線上",
+  "OFFLINE": "${forward_id}不在線上",
   "FORWARD_TO_DC": "正在將您的訊息發送至DC",
   "FORWARDED_IN_GAME": "${player}發送訊息",
 
