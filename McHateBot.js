@@ -65,9 +65,9 @@ try {
             const whitelist = (config.whitelist);
             const broadcast_regex = new RegExp("的領地告示牌廣播")
             bot.on("message", async function (jsonMsg) {
-                let health = /目標生命 \: ❤❤❤❤❤❤❤❤❤❤ \/ ([\S]+)/g.exec(jsonMsg.toString()); //清除目標生命
+                const health = new RegExp(/目標生命 \: ❤❤❤❤❤❤❤❤❤❤ \/ ([\S]+)/g); //清除目標生命
                 if (!settings.health) {
-                    if (health) {
+                    if (health.test(jsonMsg.toString())) {
                         return;
                     } else {
                         console.log(`${jsonMsg.toAnsi()}`);

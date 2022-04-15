@@ -27,10 +27,10 @@
   "auto_reply_week": "1-7",
   "auto_reply_time": "00:00-08:00",
   "auto_reply_content": "",
-  "enable_discord_bot": true,
+  "enable_discord_bot": false,
   "dc_cmd_prefix": "!",
-  "enable_send_msg_to_channel": true,
-  "directly_send_msg_to_dc": true,
+  "enable_send_msg_to_channel": false,
+  "directly_send_msg_to_dc": false,
   "channel_ID": "",
   "bot_token": ""
 }

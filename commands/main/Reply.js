@@ -32,7 +32,7 @@ module.exports = function (local,discord,settings,sd){
             if (jsonMsg.toString().includes("的玩家資料，您打錯ID了嗎?")) {
                 bot.chat(`/m ${playerid} ${get_content("OFFLINE")}`)
                 bot.chat(`/m ${playerid} ${get_content("FORWARD_TO_DC")}`)
-                discord.send(settings.forward_DC_ID, playerid, msg.slice(8 + playerid.length))
+                discord.send(playerid, msg.slice(8 + playerid.length))
                 bot.removeListener("message", Error)
             } else if (jsonMsg.toString().includes(`${playerid}發送訊息`))
             {

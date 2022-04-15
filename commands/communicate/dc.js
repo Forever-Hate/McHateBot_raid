@@ -95,24 +95,21 @@ module.exports = function (local,settings)
                                 let splited_msg = message.content.split(' ')
                                 if(splited_msg.length === 3 && msg.mentions.repliedUser.id === client.user.id) //如果是send()方法發送的訊息
                                 {
-                                    let user = splited_msg[0]
-                                    bot.chat(`/m ${user} ${msg.content}`)
-                                    this.send("",get_content("DC_RESPONSE_MSG")) //-->下面所指的
+                                    reply_id = splited_msg[0]
                                 }
                                 else if(splited_msg.length === 1 && msg.mentions.repliedUser.id === client.user.id) //如果是bot回覆的訊息(上面的send()的訊息)
                                 {
-                                    let user = splited_msg[0].substring(6)
-                                    bot.chat(`/m ${user} ${msg.content}`)
-                                    this.send("",get_content("DC_RESPONSE_MSG"))
+                                    reply_id = splited_msg[0].substring(6)
                                 }
+                                bot.chat(`/m ${reply_id} ${msg.content}`)
+                                this.send("",get_content("DC_RESPONSE_MSG"))
                             })
                             .catch(() => console.log("replied msg not found"));
                     }
                     else if(r.test(msg.content))
                     {
-                        let cmd = msg.content.replace(settings.dc_cmd_prefix,"").split(" ")[0]
-                        command = cmd
-                        switch (cmd)
+                        command = msg.content.replace(settings.dc_cmd_prefix,"").split(" ")[0]
+                        switch (command)
                         {
                             case "cmd":
                                 this.send("",get_content("DC_COMMAND_EXECUTED"))

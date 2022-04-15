@@ -6,84 +6,80 @@ let exchanged_item = undefined
 let current_window
 let position
 const Item = require("prismarine-item")('1.18.2')
-module.exports = function (local,discard,settings,log) {
+module.exports = function (local, discard, settings, log) {
     initMap()
     this.exchange_item = async function (bot, playerid, ...args) {
         if (args.length === 2) {
-            discard.shut()
+            discard.d()
             position = args[1]
             exchanged_item = exchange_map.get(position)
             if (exchanged_item) {
                 let player = findPlayer(bot, playerid)
                 if (player) {
                     await bot.lookAt(player.position.offset(0, player.height, 0))
-                    let window = await get_window(bot, "shop_exp")
-                    current_window = window
-                    await this.exchange(bot,playerid,window, exchanged_item)
+                    await this.exchange(bot, playerid, exchanged_item)
                 } else {
-                    bot.chat(`/m ${playerid}  ${get_content("EXCHANGE_NO_PLAYER_ERROR")}`)
+                    bot.chat(`/m ${playerid}  ${await get_content("EXCHANGE_NO_PLAYER_ERROR")}`)
                     bot.chat(`/tpahere ${playerid}`)
                     exchanged_item = undefined
                 }
             } else {
-                bot.chat(`/m ${playerid} ${get_content("EXCHANGE_INVALID_POSITION_ERROR")}`)
+                bot.chat(`/m ${playerid} ${await get_content("EXCHANGE_INVALID_POSITION_ERROR")}`)
                 exchanged_item = undefined
             }
         } else {
-            bot.chat(`/m ${playerid} ${get_content("EXCHANGE_FORMAT_ERROR")}`)
+            bot.chat(`/m ${playerid} ${await get_content("EXCHANGE_FORMAT_ERROR")}`)
         }
 
     }
     this.stop = async function (bot, playerid) {
-        clearInterval(this.exchangeInterval)
         if (exchanged_item !== undefined) {
+            clearInterval(this.exchangeInterval)
             bot.closeWindow(current_window)
-            await tossItem(bot, exchanged_item.i).then(()=>{
+            await tossItem(bot, exchanged_item.i).then(async () => {
                 exchange_amount = get_exchange_amount(bot, exchanged_item)
-                bot.chat(`/m ${playerid} ${get_content("EXCHANGE_STOP")}`)
+                bot.chat(`/m ${playerid} ${await get_content("EXCHANGE_STOP")}`)
             })
-            if(settings.enable_exchange_logs)
-            {
-                log.writeExchangeLog(playerid,exchanged_item.i.name,exchange_frequency)
+            if (settings.enable_exchange_logs) {
+                log.writeExchangeLog(playerid, exchanged_item.i.name, exchange_frequency)
             }
+            await discard.discarditem(bot)
         }
         exchanged_item = undefined
-        await discard.discarditem(bot)
+
 
     }
-    function get_content(path) {
-        return local.get_content(path, map, position, exchange_frequency, exchange_amount, exchanged_item ? exchanged_item.i.name : "")
-    }
-    this.exchange = async function (bot,playerid,window, Item) {
+    this.exchange = async function (bot, playerid, Item) {
         if (bot.inventory.items().length === 36 && Item.count !== 0) //背包滿且交換有物品
         {
-            bot.closeWindow(current_window)
-            bot.chat(`/m ${playerid} ${get_content("EXCHANGE_BACKPACK_IS_FULL_ERROR")}`)
+            bot.chat(`/m ${playerid} ${await get_content("EXCHANGE_BACKPACK_IS_FULL_ERROR")}`)
             await discard.abc(bot)
             exchanged_item = undefined
         }
         else //背包未滿且交換有/無物品
         {
             exchange_frequency = 0
-            let times = 1
-            bot.chat(`/m ${playerid} ${get_content("EXCHANGE_START")}`)
-            this.exchangeInterval = setInterval(() => {
-                bot.clickWindow(Item.slot, 0, 0).then(async () => {
+            let times = 0
+            bot.chat(`/m ${playerid} ${await get_content("EXCHANGE_START")}`)
+            current_window = await get_window(bot, "shop_exp")
+            this.exchangeInterval = setInterval(async () => {
+                if (bot.inventory.items().length === 36 && Item.i.stackSize - (Item.count * times) <= (Item.i.stackSize % Item.count) && Item.count !== 0) //背包滿且無法進行下一次交換
+                {
+                    //丟出物品
+                    bot.closeWindow(current_window)
+                    times = 0
+                    await tossItem(bot, Item.i).then(async () => {
+                        current_window = await get_window(bot, "shop_exp")
+                    })
+                } else if (get_exchange_amount(bot, Item) === 0) {
+                    await this.stop(bot, playerid)
+                }
+                await bot.clickWindow(Item.slot,0,0).then(()=>{
                     exchange_frequency++
-                    if (bot.inventory.items().length === 36 && Item.i.stackSize - (Item.count * times) <= 0 && Item.count !== 0) //背包滿且無法進行下一次交換
+                    if(Item.count !== 0)
                     {
-                        //丟出物品
-                        bot.closeWindow(window)
-                        times = 0
-                        await tossItem(bot, Item.i).then(async ()=>{
-                            await get_window(bot, "shop_exp")
-                        })
+                        times++
                     }
-                    else if (get_exchange_amount(bot,Item) === 0)
-                    {
-                        await this.stop(bot, playerid)
-                    }
-                    times ++
                 })
             }, Item.count === 0 ? settings.no_item_exchange_interval : settings.item_exchange_interval)
         }
@@ -93,7 +89,9 @@ module.exports = function (local,discard,settings,log) {
         clearInterval(this.exchangeInterval)
     }
 
-
+    async function get_content(path) {
+        return local.get_content(path, map, position, exchange_frequency, exchange_amount, exchanged_item ? exchanged_item.i.name : "")
+    }
     return this
 }
 
@@ -157,29 +155,22 @@ function initMap() {
 function get_window(bot, category) {
     return new Promise((resolve => {
         bot.chat(`/${category}`)
-        bot.on("windowOpen", function o(window) {
-            bot.removeListener("windowOpen", o)
+        bot.once("windowOpen", function o(window) {
             resolve(window)
         })
     }))
-
 }
 
 async function tossItem(bot, item) {
-    return new Promise(async resolve=>{
-        for (let i of bot.inventory.items()) {
-            if (i.name === item.name) {
-                await bot.tossStack(i).catch((err) => {
-                    if (err) {
-                        console.log("錯誤:" + err)
-                    }
-                })
-            }
+    for (let i of bot.inventory.items()) {
+        if (i.name === item.name) {
+            await bot.tossStack(i).catch((err) => {
+                if (err) {
+                    console.log("錯誤:" + err)
+                }
+            })
         }
-        resolve()
-    })
-
-
+    }
 }
 
 function get_exchange_amount(bot, item) {
@@ -192,7 +183,6 @@ function get_exchange_amount(bot, item) {
 
 function findPlayer(bot, player) {
     for (let entity in bot.entities) {
-        // console.log("類型:"+bot.entities[entity].type)
         if (bot.entities[entity].type === 'player' && bot.entities[entity].username === player && bot.entity.position.distanceTo(bot.entities[entity].position) <= 10) {
             return bot.entities[entity]
         }
