@@ -23,7 +23,7 @@
   "enable_detect_broadcast": false,
   "enable_reply_msg": false,
   "clear_reply_id_delay_time": 600000,
-  "enable_auto_reply": true,
+  "enable_auto_reply": false,
   "auto_reply_week": "1-7",
   "auto_reply_time": "00:00-08:00",
   "auto_reply_content": "",

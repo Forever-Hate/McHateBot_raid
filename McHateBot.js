@@ -76,15 +76,15 @@ try {
                     console.log(`${jsonMsg.toAnsi()}`);
                 }
 
-                if (jsonMsg.toString().includes("[系統] ") &&
-                    jsonMsg.toString().toLowerCase().includes(`想要你傳送到 該玩家 的位置!`) ||
+                if (jsonMsg.toString().startsWith(`[系統] `) &&
+                    jsonMsg.toString().toLowerCase().includes(`想要你傳送到 該玩家 的位置`) ||
                     jsonMsg.toString().toLowerCase().includes(`想要傳送到 你 的位置`)) {
                     let msg = jsonMsg.toString().split(/ +/g);
                     let playerid = msg[1]
                     if (whitelist.includes(playerid)) {
-                        bot.chat(`/tok`)
+                        bot.chat(`/tpaccept ${playerid}`)
                     } else {
-                        bot.chat(`/tno`)
+                        bot.chat(`/tpdeny ${playerid}`)
                     }
                 }
                 if (jsonMsg.toString().includes(`-> 您]`)) {  //偵測訊息包含為"-> 您]"
