@@ -14,8 +14,8 @@ try {
     const publicity = require("./commands/publicity/announcement")(localization)
     const Inquire = require("./commands/main/Inquire")(localization)
     const exchange = require("./commands/main/Exchange")(localization, discard, settings, Log)
-    const reply = require("./commands/main/Reply")(localization, discord, settings, sd)
-    let isRegister = false //是否已註冊過接收黑窗訊息事件&interval
+    const reply = require("./commands/main/Reply")(localization, discord, settings)
+    let isRegister = false //是否已註冊過接收黑窗訊息事件
 
     let loginOpts = {  //登入資訊
         host: config.ip,  //伺服器ip
@@ -46,10 +46,11 @@ try {
                         bot.chat(line)
                     })
 
-                    if (settings.enable_discord_bot) {
-                        discord.login(bot, settings.enable_reply_msg, settings.bot_token, settings.forward_DC_ID)
-                    }
                     isRegister = true
+                }
+
+                if (settings.enable_discord_bot) {
+                    discord.login(bot, settings.enable_reply_msg, settings.bot_token, settings.forward_DC_ID)
                 }
 
                 if (settings.attack) {
