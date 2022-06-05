@@ -26,7 +26,8 @@ try {
         tokensDebug: false,  //取得的token是否除錯
         version: false,  //bot的Minecraft版本
         auth: config.auth, //登入驗證器使用mojang或者microsoft
-        defaultChatPatterns: false
+        defaultChatPatterns: false,
+        physicsEnabled:true
     }
 
     function connect() {
@@ -55,10 +56,15 @@ try {
 
                 if (settings.attack) {
                     raid.hit(bot)
-                    raid.detect_interruption(bot)
-                    discard.discarditem(bot)
+                    if(settings.enable_detect_interrupt)
+                    {
+                        raid.detect_interruption(bot)
+                    }
+                    if(settings.enable_discard) {
+                        discard.discarditem(bot)
+                    }
                 }
-                if (settings.enable_trade_announcement) //宣傳
+                if (settings.enable_trade_announcement)
                 {
                     publicity.start(bot, settings)
                 }
@@ -101,28 +107,28 @@ try {
                             case "exp":  //查詢經驗值
                                 Inquire.experience(bot, playerid)
                                 break;
-                            case "exchange":
+                            case "exchange": //經驗交換物品
                                 await exchange.exchange_item(bot, playerid, args)
                                 break
-                            case "stop":
+                            case "stop": //停止交換物品
                                 await exchange.stop(bot, playerid)
                                 break
-                            case "item":
+                            case "item": //查詢經驗能換多少物品
                                 await exchange.inquire(bot, playerid, args)
                                 break
-                            case "sword":
+                            case "sword": //裝備劍
                                 raid.sword(bot)
                                 break
-                            case "switch":
+                            case "switch": //更換宣傳詞
                                 publicity.switch(bot, playerid, settings)
                                 break;
                             case "help": //取得指令幫助
                                 Inquire.h(bot, playerid)
                                 break;
-                            case "version":
+                            case "version": //查詢版本
                                 Inquire.i(bot, playerid)
                                 break;
-                            case "about":
+                            case "about":  //關於此bot
                                 Inquire.about(bot, playerid)
                                 break;
                             case "exit": //關閉bot
@@ -159,18 +165,34 @@ try {
             bot.once('kicked', (reason) => {
                 let time1 = sd.format(new Date(), 'YYYY-MM-DD HH-mm-ss'); //獲得系統時間
                 console.log(`[資訊] 客戶端被伺服器踢出 @${time1}   \n造成的原因:${reason}`)
-                publicity.shut()
-                discard.d()
-                raid.down()
+                if (settings.enable_trade_announcement)
+                {
+                    publicity.shut()
+                }
+                if(settings.enable_discard)
+                {
+                    discard.d()
+                }
+                if (settings.attack) {
+                    raid.down()
+                }
                 exchange.error_stop()
             });
             //斷線自動重連
             bot.once('end', () => {
                 let time1 = sd.format(new Date(), 'YYYY-MM-DD HH-mm-ss'); //獲得系統時間
                 console.log(`[資訊] 客戶端與伺服器斷線 ，10秒後將會自動重新連線...\n@${time1}`)
-                publicity.shut()
-                discard.d()
-                raid.down()
+                if (settings.enable_trade_announcement)
+                {
+                    publicity.shut()
+                }
+                if(settings.enable_discard)
+                {
+                    discard.d()
+                }
+                if (settings.attack) {
+                    raid.down()
+                }
                 exchange.error_stop()
                 setTimeout(function () {
                     connect();

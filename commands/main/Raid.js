@@ -1,4 +1,5 @@
 let no_mob = true
+let raid = true
 let username = ""
 let map = new Map()
 module.exports = function (discord, local, settings) {
@@ -6,7 +7,32 @@ module.exports = function (discord, local, settings) {
     initMap()
     this.hit = function (bot) {
         username = bot.username
-        this.attackInterval = setInterval(async () => {
+        let count = 0
+        bot.on('physicsTick',async function r(){
+            if(!raid)
+            {
+                bot.removeListener('physicsTick',r)
+                raid=true
+            }
+            count++
+            if(count === settings.Interval_ticks)
+            {
+                no_mob = true
+                for (let mobentity in bot.entities) {
+
+                    if (bot.entity.position.distanceTo(bot.entities[mobentity].position) <= 6 && mob_list.includes(bot.entities[mobentity].name)) //攻擊距離最大 = 6
+                    {
+                        await bot.attack(bot.entities[mobentity], false)
+                        if (no_mob) {
+                            no_mob = false
+                        }
+                    }
+
+                }
+                count = 0
+            }
+        })
+       /* this.attackInterval = setInterval(async () => {
             no_mob = true
             for (let mobentity in bot.entities) {
 
@@ -19,7 +45,7 @@ module.exports = function (discord, local, settings) {
                 }
 
             }
-        }, settings.Interval)
+        }, settings.Interval)*/
     }
 
     this.detect_interruption = function (bot) {
@@ -36,8 +62,11 @@ module.exports = function (discord, local, settings) {
     }
 
     this.down = function () {
-        clearInterval(this.attackInterval)
-        clearInterval(this.no_raid_interval)
+        raid = false
+        if(settings.enable_detect_interrupt)
+        {
+            clearInterval(this.no_raid_interval)
+        }
     }
 
     function get_content(path) {

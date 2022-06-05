@@ -12,7 +12,10 @@ module.exports = function (local, discard, settings, log) {
     initMap()
     this.exchange_item = async function (bot, playerid, args) {
         if (args.length === 2) {
-            discard.d()
+            if(settings.enable_discard)
+            {
+                discard.d()
+            }
             position = args[1]
             exchanged_item = exchange_map.get(position)
             if (exchanged_item) {
@@ -45,7 +48,10 @@ module.exports = function (local, discard, settings, log) {
             if (settings.enable_exchange_logs) {
                 log.writeExchangeLog(playerid, exchanged_item.i.name, exchange_frequency)
             }
-            await discard.discarditem(bot)
+            if(settings.enable_discard)
+            {
+                discard.discarditem(bot)
+            }
         }
         exchanged_item = undefined
 
