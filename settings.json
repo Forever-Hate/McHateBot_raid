@@ -3,14 +3,24 @@
   "forward_DC_ID": "DC 數字ID",
   "attack": true,
   "Interval_ticks": 10,
-  "mob_list": ["witch","vindicator","vex","pillager","evoker"],
-  "enable_detect_interrupt":true,
+  "mob_list": [
+    "witch",
+    "vindicator",
+    "vex",
+    "pillager",
+    "evoker"
+  ],
+  "enable_detect_interrupt": true,
   "check_raid_cycleTime": 30000,
   "health": false,
   "enable_discard": true,
   "enable_discard_msg": false,
   "discarditem_cycleTime": 10000,
-  "stayItem_list": ["totem_of_undying","netherite_sword","diamond_sword"],
+  "stayItem_list": [
+    "totem_of_undying",
+    "netherite_sword",
+    "diamond_sword"
+  ],
   "enable_exchange_logs": false,
   "no_item_exchange_interval": 500,
   "item_exchange_interval": 800,
@@ -18,10 +28,16 @@
   "trade_announce_cycleTime": 5000,
   "enable_trade_content_cycle": true,
   "content_skip_count": 1,
-  "trade_content": [[""
-                    ,""],
-					["",
-					 ""]],
+  "trade_content": [
+    [
+      "",
+      ""
+    ],
+    [
+      "",
+      ""
+    ]
+  ],
   "enable_detect_broadcast": false,
   "enable_reply_msg": false,
   "clear_reply_id_delay_time": 600000,
@@ -34,5 +50,7 @@
   "enable_send_msg_to_channel": false,
   "directly_send_msg_to_dc": false,
   "channel_ID": "",
-  "bot_token": ""
+  "bot_token": "",
+  "enable_reconnect_teleportation": true,
+  "reconnect_public_teleportation_point_id": "Ah_Zheng_2"
 }
