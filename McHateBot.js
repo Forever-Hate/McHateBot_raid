@@ -27,10 +27,10 @@ try {
         version: false,  //bot的Minecraft版本
         auth: config.auth, //登入驗證器使用mojang或者microsoft
         defaultChatPatterns: false,
-        physicsEnabled:true
+        physicsEnabled: true
     }
 
-    function connect() {
+    function connect(isReconnect = false) {
         tokens.use(loginOpts, function (_err, _opts) { //使用驗證緩存
             const bot = mineflayer.createBot(_opts) //定義bot為mineflayer類別中的createBot
             bot.once('spawn', () => {   //bot啟動時
@@ -56,16 +56,14 @@ try {
 
                 if (settings.attack) {
                     raid.hit(bot)
-                    if(settings.enable_detect_interrupt)
-                    {
+                    if (settings.enable_detect_interrupt) {
                         raid.detect_interruption(bot)
                     }
-                    if(settings.enable_discard) {
+                    if (settings.enable_discard) {
                         discard.discarditem(bot)
                     }
                 }
-                if (settings.enable_trade_announcement)
-                {
+                if (settings.enable_trade_announcement) {
                     publicity.start(bot, settings)
                 }
             });
@@ -83,15 +81,26 @@ try {
                     console.log(`${jsonMsg.toAnsi()}`);
                 }
 
-                if (jsonMsg.toString().startsWith(`[系統] `) &&
-                    jsonMsg.toString().toLowerCase().includes(`想要你傳送到 該玩家 的位置`) ||
-                    jsonMsg.toString().toLowerCase().includes(`想要傳送到 你 的位置`)) {
-                    let msg = jsonMsg.toString().split(/ +/g);
-                    let playerid = msg[1]
-                    if (whitelist.includes(playerid)) {
-                        bot.chat(`/tpaccept ${playerid}`)
-                    } else {
-                        bot.chat(`/tpdeny ${playerid}`)
+                if (jsonMsg.toString().startsWith(`[系統] `)) {
+                    if (jsonMsg.toString().toLowerCase().includes('讀取人物成功')) {
+                        if (!isReconnect || !settings.enable_reconnect_teleportation) {
+                            return;
+                        }
+                        if (!settings.reconnect_public_teleportation_point_id) {
+                            console.log('未設定公傳，傳送失敗');
+                            return;
+                        }
+                        bot.chat(`/warp ${settings.reconnect_public_teleportation_point_id}`);
+                    }
+                    if (jsonMsg.toString().toLowerCase().includes(`想要你傳送到 該玩家 的位置`) ||
+                        jsonMsg.toString().toLowerCase().includes(`想要傳送到 你 的位置`)) {
+                        let msg = jsonMsg.toString().split(/ +/g);
+                        let playerid = msg[1]
+                        if (whitelist.includes(playerid)) {
+                            bot.chat(`/tpaccept ${playerid}`)
+                        } else {
+                            bot.chat(`/tpdeny ${playerid}`)
+                        }
                     }
                 }
                 if (jsonMsg.toString().includes(`-> 您]`)) {  //偵測訊息包含為"-> 您]"
@@ -165,12 +174,10 @@ try {
             bot.once('kicked', (reason) => {
                 let time1 = sd.format(new Date(), 'YYYY-MM-DD HH-mm-ss'); //獲得系統時間
                 console.log(`[資訊] 客戶端被伺服器踢出 @${time1}   \n造成的原因:${reason}`)
-                if (settings.enable_trade_announcement)
-                {
+                if (settings.enable_trade_announcement) {
                     publicity.shut()
                 }
-                if(settings.enable_discard)
-                {
+                if (settings.enable_discard) {
                     discard.d()
                 }
                 if (settings.attack) {
@@ -182,12 +189,10 @@ try {
             bot.once('end', () => {
                 let time1 = sd.format(new Date(), 'YYYY-MM-DD HH-mm-ss'); //獲得系統時間
                 console.log(`[資訊] 客戶端與伺服器斷線 ，10秒後將會自動重新連線...\n@${time1}`)
-                if (settings.enable_trade_announcement)
-                {
+                if (settings.enable_trade_announcement) {
                     publicity.shut()
                 }
-                if(settings.enable_discard)
-                {
+                if (settings.enable_discard) {
                     discard.d()
                 }
                 if (settings.attack) {
@@ -195,7 +200,7 @@ try {
                 }
                 exchange.error_stop()
                 setTimeout(function () {
-                    connect();
+                    connect(true);
                 }, 10000)
             });
             bot.once('error', (reason) => {
