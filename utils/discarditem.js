@@ -29,5 +29,11 @@ module.exports = function (local, settings) {
         }
     }
 
+    this.discard = async function (bot) {
+        for (let item of bot.inventory.items()) {
+            await bot.tossStack(item)
+        }
+    }
+
     return this
 }

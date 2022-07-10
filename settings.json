@@ -3,6 +3,7 @@
   "forward_DC_ID": "DC 數字ID",
   "attack": true,
   "Interval_ticks": 10,
+  "attack_radius": 6,
   "mob_list": [
     "witch",
     "vindicator",
@@ -38,6 +39,8 @@
       ""
     ]
   ],
+  "enable_reconnect_tp": false,
+  "reconnect_tp_point": ""
   "enable_detect_broadcast": false,
   "enable_reply_msg": false,
   "clear_reply_id_delay_time": 600000,
@@ -50,7 +53,5 @@
   "enable_send_msg_to_channel": false,
   "directly_send_msg_to_dc": false,
   "channel_ID": "",
-  "bot_token": "",
-  "enable_reconnect_teleportation": true,
-  "reconnect_public_teleportation_point_id": "Ah_Zheng_2"
+  "bot_token": ""
 }

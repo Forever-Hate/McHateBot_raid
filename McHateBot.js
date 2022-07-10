@@ -83,14 +83,14 @@ try {
 
                 if (jsonMsg.toString().startsWith(`[系統] `)) {
                     if (jsonMsg.toString().toLowerCase().includes('讀取人物成功')) {
-                        if (!isReconnect || !settings.enable_reconnect_teleportation) {
+                        if (!isReconnect || !settings.enable_reconnect_tp) {
                             return;
                         }
-                        if (!settings.reconnect_public_teleportation_point_id) {
+                        if (!settings.reconnect_tp_point) {
                             console.log('未設定公傳，傳送失敗');
                             return;
                         }
-                        bot.chat(`/warp ${settings.reconnect_public_teleportation_point_id}`);
+                        bot.chat(`/warp ${settings.reconnect_tp_point}`);
                     }
                     if (jsonMsg.toString().toLowerCase().includes(`想要你傳送到 該玩家 的位置`) ||
                         jsonMsg.toString().toLowerCase().includes(`想要傳送到 你 的位置`)) {
@@ -112,10 +112,10 @@ try {
                         switch (args[0]) { //指令前綴
                             case "cmd":
                                 bot.chat(msg.slice(12 + playerid.length))
-                                break;
+                                break
                             case "exp":  //查詢經驗值
                                 Inquire.experience(bot, playerid)
-                                break;
+                                break
                             case "exchange": //經驗交換物品
                                 await exchange.exchange_item(bot, playerid, args)
                                 break
@@ -125,21 +125,27 @@ try {
                             case "item": //查詢經驗能換多少物品
                                 await exchange.inquire(bot, playerid, args)
                                 break
-                            case "sword": //裝備劍
-                                raid.sword(bot)
+                            case "equip": //裝備整套裝備
+                                raid.equipped(bot)
+                                break
+                            case "unequip":
+                                raid.unequipped(bot)
                                 break
                             case "switch": //更換宣傳詞
                                 publicity.switch(bot, playerid, settings)
-                                break;
+                                break
+                            case "throw": //丟棄所有物品
+                                await discard.discard(bot)
+                                break
                             case "help": //取得指令幫助
                                 Inquire.h(bot, playerid)
-                                break;
+                                break
                             case "version": //查詢版本
                                 Inquire.i(bot, playerid)
-                                break;
+                                break
                             case "about":  //關於此bot
                                 Inquire.about(bot, playerid)
-                                break;
+                                break
                             case "exit": //關閉bot
                                 bot.chat(`/m ${playerid} ${localization.get_content("SHUTDOWN")}`)
                                 console.log(`Shutdown in 10 seconds`)
@@ -174,16 +180,6 @@ try {
             bot.once('kicked', (reason) => {
                 let time1 = sd.format(new Date(), 'YYYY-MM-DD HH-mm-ss'); //獲得系統時間
                 console.log(`[資訊] 客戶端被伺服器踢出 @${time1}   \n造成的原因:${reason}`)
-                if (settings.enable_trade_announcement) {
-                    publicity.shut()
-                }
-                if (settings.enable_discard) {
-                    discard.d()
-                }
-                if (settings.attack) {
-                    raid.down()
-                }
-                exchange.error_stop()
             });
             //斷線自動重連
             bot.once('end', () => {
