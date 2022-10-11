@@ -15,7 +15,8 @@ try {
     const Inquire = require("./commands/main/Inquire")(localization)
     const exchange = require("./commands/main/Exchange")(localization, discard, settings, Log)
     const reply = require("./commands/main/Reply")(localization, discord, settings)
-    let isRegister = false //是否已註冊過接收黑窗訊息事件
+    const { createInterface } = require('readline');
+    let readline = null
 
     let loginOpts = {  //登入資訊
         host: config.ip,  //伺服器ip
@@ -36,19 +37,15 @@ try {
             bot.once('spawn', () => {   //bot啟動時
                 console.log(`${localization.get_content("LOADING_DONE")}`)
                 //從小黑窗中發送訊息
-                if (!isRegister) {
-                    const readline = require('readline');
-                    const rl = readline.createInterface({
+                if (!isReconnect || !readline) {
+                    readline = createInterface({
                         input: process.stdin,
                         output: process.stdout,
                         terminal: false
                     });
-                    rl.on('line', async function (line) {
-                        bot.chat(line)
-                    })
-
-                    isRegister = true
                 }
+
+                readline.on('line', async line => (bot.chat(line)));
 
                 if (settings.enable_discord_bot) {
                     discord.login(bot, settings.enable_reply_msg, settings.bot_token, settings.forward_DC_ID)
@@ -193,6 +190,9 @@ try {
                 }
                 if (settings.attack) {
                     raid.down()
+                }
+                if (readline) {
+                    readline.removeAllListeners('line');
                 }
                 exchange.error_stop()
                 setTimeout(function () {

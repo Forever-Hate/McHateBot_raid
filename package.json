@@ -12,6 +12,9 @@
     "typescript": "^4.4.3"
   },
   "bin": "index.js",
+  "engines": {
+    "node": ">= 16"
+  },
   "pkg": {
     "assets": [
       "/node_modules/mineflayer",

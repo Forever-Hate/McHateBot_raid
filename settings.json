@@ -40,7 +40,7 @@
     ]
   ],
   "enable_reconnect_tp": false,
-  "reconnect_tp_point": ""
+  "reconnect_tp_point": "",
   "enable_detect_broadcast": false,
   "enable_reply_msg": false,
   "clear_reply_id_delay_time": 600000,
