@@ -1,6 +1,15 @@
 {
   "LOADING_DONE": "【McHatebot】 載入完成",
   "SHUTDOWN": "正在關閉bot中...",
+  "WELCOME_BANNER":[
+    "============================================================",
+    "              歡迎使用McHateBot 突襲機器人",
+    "          使用上如果有任何問題，請到Discord回報",
+    "    官方Discord群:https://discord.com/invite/kXwBA4tFKb",
+    "           祝您使用愉快，請多多宣傳幫助更多人!!",
+    "                      歡迎贊助支持!!",
+    "============================================================"
+  ],
 
   "NEED_MORE_CONTENT": "請輸入更多宣傳文字再使用此指令",
   "NEXT_INDEX":"切換至第${trade_content_index}組宣傳文字",
@@ -14,12 +23,46 @@
   "DISCARD_MSG": "清垃圾!!",
 
   "EXP": "等級: ${level} 總經驗值: ${points} 百分比: ${percent}%",
-  "HELP": "請至網頁上查詢相關指令",
-  "V": "當前bot版本為:${version}",
-  "ABOUT": ["bot: [McHateBot] 突襲機器人","作者DC: ${author_dc}","遊戲ID: ${author_id}","有任何問題或回饋歡迎私訊我"],
+  "HELP": "顯示指令列表於console上",
+  "COMMAND_LIST": [
+    "=======================================",
+    "                指令:",
+    "- cmd [指令內容]:透過bot執行指令 ex [cmd 你好] 將透過bot發送 你好 至區域頻道",
+    "=======================================",
+    "                查詢:",
+    "- about: 查詢關於此bot的資訊",
+    "- exp: 查詢bot當前經驗值",
+    "- help: 查詢bot指令列表，並顯示於console上",
+    "- version: 查詢bot當前版本",
+    "=======================================",
+    "                兌換:",
+    "- exchange [座標]: 使用經驗值兌換物品。座標由上到下(A-F)由左至右(1-9) A1 = 海綿 B1 = 鐵馬鎧",
+    "- item [座標]: 查詢當前經驗值能兌換多少指定物品。座標由上到下(A-F)由左至右(1-9) A1 = 海綿 A2 = 墨囊",
+    "- stop: 停止交換物品",
+    "=======================================",
+    "                宣傳:",
+    "- switch: 強制切換至下一組宣傳詞",
+    "=======================================",
+    "                裝備:",
+    "- equip: 裝備整套裝備(包含劍、鞘翅)",
+    "- unequip: 脫下整套裝備(包含劍、鞘翅)，並丟出",
+    "- throw: 丟棄所有物品",
+    "=======================================",
+    "                統計:",
+    "- currentlog: 顯示當前時間段的統計表(於console)",
+    "- fulllog: 顯示所有時間的統計表(於console)",
+    "======================================="
+  ],
+  "VERSION": "當前bot版本為:${version}",
+  "ABOUT": [
+    "bot: McHateBot 突襲機器人",
+    "作者DC: ${author_dc}",
+    "遊戲ID: ${author_id}",
+    "有任何問題或回饋歡迎私訊我"
+  ],
 
   "EXCHANGE_NO_PLAYER_ERROR": "需要距離我10格內才能執行此指令，請TP過來",
-  "EXCHANGE_INVALID_POSITION_ERROR": "未知的物品座標:${coordinate}",
+  "EXCHANGE_INVALID_POSITION_ERROR": "未知的物品座標:${exchangePosition}",
   "EXCHANGE_FORMAT_ERROR": "輸入格式錯誤! 格式為:exchange 座標",
   "EXCHANGE_START": "開始兌換:${item}",
   "EXCHANGE_STOP": "已停止兌換${item} 已兌換${frequency}次，尚可兌換${amount}次",
@@ -30,9 +73,9 @@
 
   "REPLIED": "已回覆訊息",
   "NO_ONE_REPLIED": "目前沒有需要回覆的人",
-  "OFFLINE": "${forward_id}不在線上",
+  "OFFLINE": "${forward_id} 不在線上",
   "FORWARD_TO_DC": "正在將您的訊息發送至DC",
-  "FORWARDED_IN_GAME": "${player}發送訊息",
+  "FORWARDED_IN_GAME": "${player} 發送訊息",
 
   "DC_BANNER": "==============================================================",
   "DC_BOT_ONLINE": "   Discord bot 已上線 使用者名稱為: ${name}!",
@@ -43,6 +86,15 @@
   "DC_COMMAND_EXECUTED": "指令已執行",
   "DC_NO_MATCH_COMMAND":"找不到符合的指令${command}",
   "DC_NO_PERMISSION": "你沒有權限對我下指令或透過我回覆訊息",
-  "DC_RESPONSE_MSG": "已回覆訊息給${reply_id}"
+  "DC_RESPONSE_MSG": "已回覆訊息給${replyId}",
+
+  "TRACK_ERROR":"參數輸入錯誤，請更正後再輸入",
+  "TRACK_BANNER":"=====================================================",
+  "TRACK_TIME":"總時長: ${totalTime}",
+  "TRACK_MAIN_TITLE": "統計表",
+  "TRACK_SUB_TITLE": "物品一覽:",
+  "TRACK_SUB_ITEM":"名稱:${name} 拾取數:${amount}個",
+  "TRACK_THIRD_TITLE":"效率一覽:",
+  "TRACK_THIRD_ITEM":"名稱:${name} 效率:${efficiency}"
 
 }

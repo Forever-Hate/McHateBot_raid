@@ -8,7 +8,7 @@ async function collectPackets (version, names = ['login'], cb) {
   console.log('Started server')
 
   const client = nmp.createClient({
-    version: version,
+    version,
     host: 'localhost',
     port: 25569,
     username: 'test'

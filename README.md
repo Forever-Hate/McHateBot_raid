@@ -9,6 +9,7 @@
 1.可以透過私訊Bot來執行命令(須設定白名單)  
 2.白名單指令系統(避免有心人士亂搞)  
 3.自動接受tpa & tpahere(需白名單)
+4.可自動儲存綠寶石，無須額外的收集系統
 ```
 ## 授權
 本著作採用創用CC[姓名標示-非商業性-相同方式分享 4.0 國際 (CC BY-NC-SA 4.0)](https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh_TW)授權條款授權<br>

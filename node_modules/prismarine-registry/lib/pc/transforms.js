@@ -58,11 +58,11 @@ module.exports = {
               ...oldEffects,
               mood_sound: biome.effects?.mood_sound
                 ? nbt.comp({
-                    tick_delay: nbt.int(biome.effects.mood_sound.tick_delay),
-                    offset: nbt.double(biome.effects.mood_sound.offset),
-                    sound: nbt.string(biome.effects.mood_sound.sound),
-                    block_search_extent: nbt.int(biome.effects.mood_sound.block_search_extent)
-                  })
+                  tick_delay: nbt.int(biome.effects.mood_sound.tick_delay),
+                  offset: nbt.double(biome.effects.mood_sound.offset),
+                  sound: nbt.string(biome.effects.mood_sound.sound),
+                  block_search_extent: nbt.int(biome.effects.mood_sound.block_search_extent)
+                })
                 : undefined
             })
           })

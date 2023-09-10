@@ -1,13 +1,5 @@
 module.exports = loader
 
-let biomes
-
-function loader (registryOrVersion) {
-  const registry = typeof registryOrVersion === 'string' ? require('prismarine-registry')(registryOrVersion) : registryOrVersion
-  biomes = registry.biomes
-  return Biome
-}
-
 const emptyBiome = {
   color: 0,
   height: null,
@@ -16,6 +8,10 @@ const emptyBiome = {
   temperature: 0
 }
 
-function Biome (id) {
-  return biomes[id] || { ...emptyBiome, id }
+function loader (registryOrVersion) {
+  const registry = typeof registryOrVersion === 'string' ? require('prismarine-registry')(registryOrVersion) : registryOrVersion
+  const biomes = registry.biomes
+  return function Biome (id) {
+    return biomes?.[id] || { ...emptyBiome, id }
+  }
 }

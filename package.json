@@ -1,23 +1,39 @@
 {
-  "name": "mchatebot",
-  "version": "1.1.4",
+  "name": "mchatebot_raid",
+  "version": "1.2",
   "author": "I-love-minecraft#2437",
+  "main": "McHateBot.ts",
+  "scripts": {
+    "build": "tsc && cpy .env out && cpy ./language out && cpy config-orginal.json out && cpy settings-orginal.json out && rename out\\config-orginal.json config.json && rename out\\settings-orginal.json settings.json && pkg ./out/McHateBot.js -t node18-win-x64 -c package.json && cpy config-orginal.json exe && cpy settings-orginal.json exe && cpy ./language exe && cpy .env exe && rename exe\\config-orginal.json config.json && rename exe\\settings-orginal.json settings.json"
+  },
   "dependencies": {
     "discord.js": "^13.6.0",
-    "minecraft-data": "^2.111.0",
-    "mineflayer": "^3.18.0",
-    "prismarine-item": "^1.11.3",
+    "dotenv": "^16.3.1",
+    "minecraft-data": "^3.44.0",
+    "mineflayer": "^4.14.0",
+    "mineflayer-web-inventory": "^1.8.4",
+    "package.json": "^2.0.1",
     "prismarine-tokens-fixed": "^1.1.2",
-    "silly-datetime": "^0.1.2",
-    "typescript": "^4.4.3"
+    "prismarine-windows": "^2.8.0",
+    "silly-datetime": "^0.1.2"
   },
   "bin": "index.js",
+  "engines": {
+    "node": ">= 18"
+  },
   "pkg": {
     "assets": [
       "/node_modules/mineflayer",
-      "/node_modules/prismarine-tokens-fixed",
       "./commands",
-      "./utils"
-    ]
+      "./utils",
+      "./models",
+      ".env"
+    ],
+    "outputPath": "./exe"
+  },
+  "devDependencies": {
+    "cpy-cli": "^5.0.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.2.2"
   }
 }

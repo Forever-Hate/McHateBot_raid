@@ -1,27 +1,51 @@
 const endianToggle = require('endian-toggle')
 
-module.exports = function (client, server, { beforePing = null }) {
+module.exports = function (client, server, { beforePing = null, version, fallbackVersion }) {
   client.once('ping_start', onPing)
   client.once('legacy_server_list_ping', onLegacyPing)
 
   function onPing () {
+    let responseVersion = {
+      name: server.mcversion.minecraftVersion,
+      protocol: server.mcversion.version
+    }
+
+    if (version === false) {
+      let minecraftData = require('minecraft-data')(client.protocolVersion)
+      if (!minecraftData && fallbackVersion !== undefined) {
+        minecraftData = require('minecraft-data')(fallbackVersion)
+      }
+      if (minecraftData) {
+        responseVersion = {
+          name: minecraftData.version.minecraftVersion,
+          protocol: minecraftData.version.version
+        }
+      } else {
+        responseVersion = {
+          name: client.version,
+          protocol: client.protocolVersion
+        }
+      }
+    }
+
     const response = {
-      version: {
-        name: server.mcversion.minecraftVersion,
-        protocol: server.mcversion.version
-      },
+      version: responseVersion,
       players: {
         max: server.maxPlayers,
         online: server.playerCount,
         sample: []
       },
-      description: { text: server.motd },
+      description: server.motdMsg ?? { text: server.motd },
       favicon: server.favicon
     }
 
     function answerToPing (err, response) {
       if (err) return
-      client.write('server_info', { response: JSON.stringify(response) })
+      if (response === false) {
+        client.socket.destroy()
+      } else {
+        client.write('server_info', { response: JSON.stringify(response) })
+      }
     }
 
     if (beforePing) {

@@ -241,15 +241,35 @@ class CommandInteractionOptionResolver {
   }
 
   /**
+   * The full autocomplete option object.
+   * @typedef {Object} AutocompleteFocusedOption
+   * @property {string} name The name of the option
+   * @property {ApplicationCommandOptionType} type The type of the application command option
+   * @property {string} value The value of the option
+   * @property {boolean} focused Whether this option is currently in focus for autocomplete
+   */
+
+  /**
    * Gets the focused option.
    * @param {boolean} [getFull=false] Whether to get the full option object
-   * @returns {string|number|ApplicationCommandOptionChoice}
+   * @returns {string|AutocompleteFocusedOption}
    * The value of the option, or the whole option if getFull is true
    */
   getFocused(getFull = false) {
     const focusedOption = this._hoistedOptions.find(option => option.focused);
     if (!focusedOption) throw new TypeError('AUTOCOMPLETE_INTERACTION_OPTION_NO_FOCUSED_OPTION');
     return getFull ? focusedOption : focusedOption.value;
+  }
+
+  /**
+   * Gets an attachment option.
+   * @param {string} name The name of the option.
+   * @param {boolean} [required=false] Whether to throw an error if the option is not found.
+   * @returns {?MessageAttachment} The value of the option, or null if not set and not required.
+   */
+  getAttachment(name, required = false) {
+    const option = this._getTypedOption(name, 'ATTACHMENT', ['attachment'], required);
+    return option?.attachment ?? null;
   }
 }
 

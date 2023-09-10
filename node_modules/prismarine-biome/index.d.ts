@@ -18,5 +18,5 @@ declare class Biome {
 
 
 /** @deprecated */
-export declare function loader(mcVersion: string): typeof Biome
-export declare function loader(registry: ReturnType<typeof Registry>): typeof Biome
+export default function loader(mcVersion: string): typeof Biome
+export default function loader(registry: ReturnType<typeof Registry>): typeof Biome
