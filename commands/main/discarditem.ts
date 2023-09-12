@@ -6,11 +6,13 @@ import { logger } from '../../utils/logger';
 import { localizer } from '../../utils/localization';
 import { DiscardItemInterface } from '../../models/modules';
 import { Item, get_window } from '../../utils/util';
+import { DiscordManager } from '../communicate/dc';
 
 
 export class DiscardItemer implements DiscardItemInterface
 {
   settings: Setting;
+  discord: DiscordManager;
   discardItemInterval: NodeJS.Timer | null = null;
   /**
    * 丟棄設定檔裡設定值以外的物品
@@ -36,37 +38,46 @@ export class DiscardItemer implements DiscardItemInterface
           if (!this.settings.stayItem_list.includes(item.name)) 
           {
             logger.d(`${item.name} 不包含在不要丟掉的清單內`)
-            if (item.name === "totem_of_undying")
+            if(this.settings.enable_stay_totem)
             {
-              if(checkTotemHasSet)
+              logger.d("有開啟保留圖騰")
+              if (item.name === "totem_of_undying")
               {
-                logger.d(`已經超過一組圖騰`)
-                if (item.count !== 64)
+                if(checkTotemHasSet)
                 {
-                  logger.d(`丟棄不是一組的圖騰，數量為: ${item.count} 個`)
-                  await bot.tossStack(item).catch((err: Error) => {
-                    if (err) {
-                      console.log("error:" + err);
-                    }
-                  });
-                }
-              }
-              else
-              {
-                logger.d(`尚未超過一組圖騰`)
-                if(!stacked)
-                {
-                  logger.d(`尚未疊加圖騰`)
-                  await this._stackTotem(bot)
-                  stacked = true;
+                  logger.d(`已經超過一組圖騰`)
+                  if (item.count !== 64)
+                  {
+                    logger.d(`丟棄不是一組的圖騰，數量為: ${item.count} 個`)
+                    await bot.tossStack(item).catch((err: Error) => {
+                      if (err) {
+                        console.log("error:" + err);
+                      }
+                    });
+                  }
                 }
                 else
                 {
-                  logger.d(`已疊加圖騰`)
+                  logger.d(`尚未超過一組圖騰`)
+                  if(this.settings.enable_auto_stack_totem)
+                  {
+                    logger.d(`有開啟自動堆疊圖騰`)
+                    if(!stacked)
+                    {
+                      logger.d(`尚未疊加圖騰`)
+                      await this._stackTotem(bot)
+                      stacked = true;
+                    }
+                    else
+                    {
+                      logger.d(`已疊加圖騰`)
+                    }
+                  }
                 }
+                continue;
               }
-              continue;
             }
+            
             await bot.tossStack(item).catch((err: Error) => {
               if (err) {
                 console.log("error:" + err);
@@ -141,15 +152,20 @@ export class DiscardItemer implements DiscardItemInterface
   {
     return new Promise(async resolve => {
       logger.i("進入_stackTotem，疊加圖騰")
+      const botYaw = bot.entity.yaw;
+      const botPitch = bot.entity.pitch;
       bot.setControlState("sneak",true)
       const block:Block = bot.blockAt(bot.entity.position.offset(0,-1,0))!
       logger.d(`腳下的方塊為: ${block.displayName}`)
       await bot.equip(bot.inventory.items().find(i => i.name === "totem_of_undying") as typeof Item,"hand").then(()=>{
           setTimeout(()=>{
-              bot.stopDigging()
-          },1000)
+              bot.stopDigging();
+          },1500)
           bot.dig(block,false).catch(async() => {
-              await bot.equip(bot.inventory.items().find(i => i.name.endsWith("sword")) as typeof Item,"hand")
+              await bot.equip(bot.inventory.items().find(i => i.name.endsWith("sword")) as typeof Item,"hand").catch(()=>{
+                logger.d(`沒有找到劍`);
+              })
+              await bot.look(botYaw,botPitch,true);
               bot.setControlState("sneak",false)
               resolve();
           })
@@ -165,15 +181,38 @@ export class DiscardItemer implements DiscardItemInterface
   {
     logger.i("進入_checkTotemHasSet，檢查身上是否有一組圖騰")
     return new Promise(resolve => {
-      let totemHasSet = false
+      let totemHasSet = false;
+      let numOfTotem = 0;
       for (const item of bot.inventory.items()) 
       {
-        if (item.name === "totem_of_undying" && item.count === 64) 
+        if (item.name === "totem_of_undying") 
         {
-          totemHasSet = true
-          break;
+          numOfTotem += item.count;
+          if(item.count === 64)
+          {
+            totemHasSet = true;
+          }
         }
       }
+      if(this.settings.enable_totem_notifier)
+      {
+        logger.d("有開啟圖騰數量提醒")
+        if(numOfTotem <= 5)
+        {
+          logger.d("圖騰數量低於5個")
+          if(this.settings.enable_reply_msg)
+          {
+            logger.d("有開啟回覆訊息，提醒")
+            bot.chat(`/m ${this.settings.forward_ID} ${localizer.format("TOTEM_NOT_ENOUGH_ERROR") as string}`)
+            if(this.settings.enable_discord_bot)
+            {
+              logger.d("有開啟discord bot，提醒")
+              this.discord.send(bot.username,localizer.format("TOTEM_NOT_ENOUGH_ERROR") as string)
+            }
+          }
+        }
+      }
+      
       resolve(totemHasSet)
     })
   }
@@ -213,9 +252,10 @@ export class DiscardItemer implements DiscardItemInterface
     }
   }
 
-  constructor(settings: Setting)
+  constructor(discord:DiscordManager,settings: Setting)
   {
     logger.i("建立DiscardItemer物件")
+    this.discord = discord;
     this.settings = settings;
   }
   

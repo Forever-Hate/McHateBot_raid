@@ -13,13 +13,12 @@ export default function login()
     const loginOpts:BotOptions = {  //登入資訊
         host: config.ip,  //伺服器ip
         port: config.port >= 0 ? config.port : undefined,  //伺服器port(預設25565)
-        username: config.userName,  //Minecraft帳號
+        username: config.username,  //Minecraft帳號
         password: config.password,  //Minecraft密碼
         version: config.version,  //bot的Minecraft版本
         auth: config.auth === 'microsoft' ? 'microsoft' : 'offline', //登入驗證器使用offline或者microsoft
         defaultChatPatterns: false,
         checkTimeoutInterval:3600000
-    
     }
     try
     {
@@ -28,6 +27,7 @@ export default function login()
     catch(e:any)
     {
         logger.e(e);
+        logger.writeErrorLog(e.toString());
     }
     
 }

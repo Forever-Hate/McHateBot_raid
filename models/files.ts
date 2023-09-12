@@ -2,7 +2,7 @@
 export interface Config {
     readonly ip: string,
     readonly port: number,
-    readonly userName: string,
+    readonly username: string,
     readonly password: string,
     readonly version:string,
     readonly auth: string,
@@ -30,6 +30,9 @@ export interface Setting {
     readonly enable_discard: boolean;
     readonly enable_discard_msg: boolean;
     readonly discarditem_cycleTime: number;
+    readonly enable_stay_totem:boolean;
+    readonly enable_totem_notifier:boolean;
+    readonly enable_auto_stack_totem:boolean;
     readonly stayItem_list: string[];
     
     readonly enable_exchange_logs: boolean;
@@ -72,6 +75,7 @@ export interface Language {
 
     readonly DETECT_BROADCAST_MSG_PREFIX: string;
     readonly DISCARD_MSG: string;
+    readonly TOTEM_NOT_ENOUGH_ERROR:string;
 
     readonly EXP: string;
     readonly HELP: string;
@@ -106,6 +110,7 @@ export interface Language {
     readonly DC_NO_PERMISSION: string;
     readonly DC_RESPONSE_MSG: string;
 
+    readonly TRACK_COMMAND_ERROR: string;
     readonly TRACK_BANNER: string;
     readonly TRACK_TIME: string;
     readonly TRACK_MAIN_TITLE: string;

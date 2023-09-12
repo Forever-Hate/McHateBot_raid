@@ -21,8 +21,8 @@ try{
     const sd = require('silly-datetime');//讀取silly-datetime模塊
     setLogger(settings);
     setLocalization(config);
-    const discard:DiscardItemer = new DiscardItemer(settings)
     const discord:DiscordManager = new DiscordManager(settings)
+    const discard:DiscardItemer = new DiscardItemer(discord ,settings)
     const raid:RaidController = new RaidController(discord ,settings)
     const publicity:Announcer = new Announcer(settings)
     const Inquire:Informer = new Informer()
@@ -189,10 +189,28 @@ try{
                             Inquire.about(bot, playerId)
                             break
                         case "currentlog": //取得當前拾取紀錄log
-                            tracker.getCurrentTrackLog(bot,playerId, args);
+                            if(settings.enable_track)
+                            {
+                                logger.d("有開啟追蹤")
+                                tracker.getCurrentTrackLog(bot,playerId, args);
+                            }
+                            else
+                            {
+                                logger.d("沒有開啟追蹤")
+                                bot.chat(`/m ${playerId} ${localizer.format("TRACK_COMMAND_ERROR")}`)
+                            }
                             break;
                         case "fulllog": //取得所有拾取紀錄log
-                            tracker.getFullTrackLog(bot,playerId);
+                            if(settings.enable_track)
+                            {
+                                logger.d("有開啟追蹤")
+                                tracker.getFullTrackLog(bot,playerId);
+                            }
+                            else
+                            {
+                                logger.d("沒有開啟追蹤")
+                                bot.chat(`/m ${playerId} ${localizer.format("TRACK_COMMAND_ERROR")}`)
+                            }
                             break;
                         case "exit": //關閉bot
                             bot.chat(`/m ${playerId} ${localizer.format("SHUTDOWN")}`)
@@ -225,7 +243,11 @@ try{
                         logger.d("有開啟discord bot，轉傳領地宣傳訊息")
                         discord.send(localizer.format("DETECT_BROADCAST_MSG_PREFIX") as string, args)
                     }
-                    bot.chat(`/m ${settings.forward_ID} ${localizer.format("DETECT_BROADCAST_MSG_PREFIX")}: ${args}`)
+                    if(settings.enable_reply_msg)
+                    {
+                        logger.d("有開啟回覆訊息")
+                        bot.chat(`/m ${settings.forward_ID} ${localizer.format("DETECT_BROADCAST_MSG_PREFIX")}: ${args}`)
+                    }
                 }
             }
         })

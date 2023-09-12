@@ -21,6 +21,7 @@
 
   "DETECT_BROADCAST_MSG_PREFIX": "領地廣播",
   "DISCARD_MSG": "清垃圾!!",
+  "TOTEM_NOT_ENOUGH_ERROR":"圖騰總數低於5個，請盡快補充",
 
   "EXP": "等級: ${level} 總經驗值: ${points} 百分比: ${percent}%",
   "HELP": "顯示指令列表於console上",
@@ -88,6 +89,7 @@
   "DC_NO_PERMISSION": "你沒有權限對我下指令或透過我回覆訊息",
   "DC_RESPONSE_MSG": "已回覆訊息給${replyId}",
 
+  "TRACK_COMMAND_ERROR":"開啟功能後，才能執行此指令",
   "TRACK_ERROR":"參數輸入錯誤，請更正後再輸入",
   "TRACK_BANNER":"=====================================================",
   "TRACK_TIME":"總時長: ${totalTime}",

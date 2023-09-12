@@ -87,7 +87,11 @@ export class RaidController implements RaidInterface
                     logger.d("有開啟discord bot")
                     this.discord.send("", `${localizer.format("DETECT_INTERRUPT_MSG_DC_PREFIX", this.map)}: ${localizer.format("DETECT_INTERRUPT_MSG_DC_STEM", this.map)}`);
                 }
-                bot.chat(`/m ${this.settings.forward_ID} ${localizer.format("DETECT_INTERRUPT_MSG_GAME_STEM", this.map)}`);
+                if(this.settings.enable_reply_msg)
+                {
+                    logger.d("有開啟回覆訊息")
+                    bot.chat(`/m ${this.settings.forward_ID} ${localizer.format("DETECT_INTERRUPT_MSG_GAME_STEM", this.map)}`);
+                }
             }
             exp = bot.experience.points;
         }, this.settings.check_raid_cycleTime * 1000);

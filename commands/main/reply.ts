@@ -75,8 +75,12 @@ export class ReplyController implements ReplyInterface
             else 
             {
                 logger.d("未開啟discord bot或直接轉發至DC，轉發至遊戲")
-                bot.chat(`/m ${reply.settings.forward_ID} ${localizer.format("FORWARDED_IN_GAME",reply.map)}: ${msg.slice(8 + playerId.length)}`);
-                bot.on("message", _checkForwardIdOnline);
+                if(reply.settings.enable_reply_msg)
+                {
+                    logger.d("有開啟回覆訊息")
+                    bot.chat(`/m ${reply.settings.forward_ID} ${localizer.format("FORWARDED_IN_GAME",reply.map)}: ${msg.slice(8 + playerId.length)}`); 
+                    bot.on("message", _checkForwardIdOnline);
+                }
             }
 
             /**
