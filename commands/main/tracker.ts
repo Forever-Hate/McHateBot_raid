@@ -4,9 +4,11 @@ import { Entity } from "prismarine-entity";
 import { Setting } from "../../models/files";
 import { localizer } from "../../utils/localization";
 import { logger } from "../../utils/logger";
-import { Item } from "../../utils/util";
+import { Item, formatThousandths, formatTime } from "../../utils/util";
+import { bot } from "./bot";
 const sd = require('silly-datetime'); //讀取silly-datetime模塊
 
+export let tracker:Tracker;
 /**
  * Log介面
  * 
@@ -24,6 +26,7 @@ interface ITrackLog{
     isPartTime?: boolean | undefined;
     settings:Setting;
 }
+
 /**
  * 拾取紀錄Log類別(透過 ITrackLog interface 建立)
  * 
@@ -57,14 +60,14 @@ export class TrackLog implements ITrackLog{
     {
         logger.i("進入toString，將TrackLog物件轉換成字串陣列")
         const sList:string[] = []
-        this.map.set("totalTime",this._formatTime(this.totalTime))
+        this.map.set("totalTime",formatTime(this.totalTime))
         sList.push(localizer.format("TRACK_BANNER",this.map) as string)
         sList.push(localizer.format("TRACK_TIME",this.map) as string)
         sList.push(localizer.format("TRACK_MAIN_TITLE",this.map) as string)
         sList.push(localizer.format("TRACK_SUB_TITLE",this.map) as string)
         this.items.forEach((value,key)=>{
             this.map.set("name",key)
-            this.map.set("amount",value.toString())
+            this.map.set("amount",formatThousandths(value))
             sList.push(localizer.format("TRACK_SUB_ITEM",this.map) as string)
         })
         sList.push(localizer.format("TRACK_THIRD_TITLE",this.map) as string)
@@ -85,7 +88,7 @@ export class TrackLog implements ITrackLog{
         return {
             startTime: sd.format(this.startTime, 'YYYY/MM/DD HH:mm:ss'),
             endTime: sd.format(this.endTime, 'YYYY/MM/DD HH:mm:ss'),
-            totalTime: this._formatTime(this.totalTime),
+            totalTime: formatTime(this.totalTime),
             isPartTime: this.isPartTime,
             items: Object.fromEntries(this.items),
             average: Object.fromEntries(this.average),
@@ -107,41 +110,6 @@ export class TrackLog implements ITrackLog{
     }
 
     /**
-     * 內部函數，格式化時間(天:小時:分:秒)
-     * @param { number } totalTime - 秒數
-     * @returns { string } 格式化後的時間
-     */
-    _formatTime(totalTime: number): string 
-    {
-        logger.i("進入_formatTime，格式化時間")
-        const days:number = Math.floor(totalTime / 86400); 
-        const hours:number = Math.floor((totalTime % 86400) / 3600);
-        const minutes:number = Math.floor((totalTime % 3600) / 60);
-        const seconds:number = totalTime % 60;
-      
-        let result:string = '';
-      
-        if (days > 0) 
-        {
-          result += `${days}天`;
-        }
-        if (hours > 0) 
-        {
-          result += `${hours}小時`;
-        }
-        if (minutes > 0) 
-        {
-          result += `${minutes}分`;
-        }
-        if (seconds > 0 || result === '') 
-        {
-          result += `${seconds}秒`;
-        }
-        logger.d(`回傳格式化時間結果: ${result}`)
-        return result;
-    }
-
-    /**
      * 內部函數，計算平均
      * @param { number } itemCount - 物品數量
      * @returns { string } 計算結果
@@ -153,13 +121,13 @@ export class TrackLog implements ITrackLog{
         if (this.isPartTime)
         {
             logger.d("為部分時間")
-            s = `${itemCount}個/${this._formatTime(this.settings.track_record)}`
+            s = `${formatThousandths(itemCount)}個/${formatTime(this.settings.track_record)}`
         }
         else
         {
             logger.d("不為部分時間")
-            const time:number = Number((this.totalTime / this.settings.track_record).toFixed(1))
-            s = `${Number((itemCount / time).toFixed(1))}個/${this._formatTime(this.settings.track_record)}`
+            const time:number = Number((this.totalTime / this.settings.track_record).toFixed(1)) < 1 ? 1 : Number((this.totalTime / this.settings.track_record).toFixed(1))
+            s = `${formatThousandths(Number((itemCount / time).toFixed(1)))}個/${formatTime(this.settings.track_record)}`
         }
         logger.d(`回傳計算平均結果: ${s}`)
         return s 
@@ -195,9 +163,8 @@ export class Tracker
 
     /**
      * 開始追蹤
-     * @param bot - bot實例
      */
-    track(bot:Bot)
+    track()
     {
         logger.i("進入track，開始追蹤紀錄，並註冊playerCollect")
         this.startTime = new Date()
@@ -218,7 +185,7 @@ export class Tracker
                     logger.d(`拾取的物品: ${item.name}`);
                     logger.d(`拾取的數量: ${item.count}`);
                     
-                    if (this.settings.track_list.includes(itemId))
+                    if (this.settings.track_list.includes(item.name))
                     {
                         logger.d(`存在於追蹤物品清單中`);
                         //總表
@@ -289,9 +256,8 @@ export class Tracker
     
     /**
      * 取消追蹤
-     * @param bot - bot實例
      */
-    trackDown(bot:Bot)
+    trackDown()
     {
         logger.i("進入trackDown，取消監聽 playerCollect 與關閉Interval")
         bot.removeAllListeners('playerCollect')
@@ -310,18 +276,12 @@ export class Tracker
 
     /**
      * 取得當前紀錄
-     * @param { Bot } bot - bot實例
      * @param { string } playerId - 發送指令的玩家ID
      */
-    getCurrentTrackLog(bot:Bot,playerId:string,args:string[])
+    getCurrentTrackLog(playerId:string,args:string[])
     {
         logger.i("進入getCurrentTrackLog，取得當前拾取紀錄")
-        let track:TrackLog = new TrackLog({
-            items:this.partTimeCollection,
-            settings:this.settings,
-            startTime:this.partStartTime as Date,
-            endTime:new Date()
-        });
+        let track:TrackLog = this.getTrackLog(true);
         if(args.length === 2)
         {
             logger.d("參數數量為2")
@@ -368,19 +328,12 @@ export class Tracker
 
     /**
      * 取得所有紀錄
-     * @param { Bot } bot - bot實例
      * @param { string } playerId - 發送指令的玩家ID
      */
-    getFullTrackLog(bot:Bot,playerId:string)
+    getFullTrackLog(playerId:string)
     {
         logger.i("進入getFullTrackLog，取得所有拾取紀錄")
-        const track = new TrackLog({
-            items:this.totalCollection,
-            settings:this.settings,
-            startTime:this.startTime as Date,
-            endTime:new Date(),
-            isPartTime:false,
-        })
+        const track = this.getTrackLog(false);
         track.toString().forEach((str, index) => {
             setTimeout(()=>{
              bot.chat(`/m ${playerId} ${str}`);
@@ -390,10 +343,45 @@ export class Tracker
             logger.l(str);
         }) 
     }
+    /**
+     * 取得紀錄
+     * @param { boolean } isCurrent - 是否為當前紀錄
+     * @returns { TrackLog } 紀錄
+     */
+    getTrackLog(isCurrent:boolean):TrackLog
+    {
+        logger.i("進入getTrackLog，取得拾取紀錄")
+        if(isCurrent)
+        {
+            logger.d("為當前紀錄")
+            return new TrackLog({
+                items:this.partTimeCollection,
+                settings:this.settings,
+                startTime:this.partStartTime as Date,
+                endTime:new Date()
+            });
+        }
+        else
+        {
+            logger.d("不為當前紀錄")
+            return new TrackLog({
+                items:this.totalCollection,
+                settings:this.settings,
+                startTime:this.startTime as Date,
+                endTime:new Date(),
+                isPartTime:false,
+            })
+        }
+    }
 
     constructor(settings:Setting)
     {
         logger.i("建立Tracker物件")
         this.settings = settings;
     }
+}
+export default function setTracker(settings:Setting)
+{
+    logger.i("進入setTracker，建立一個新的Tracker物件")
+    tracker = new Tracker(settings);
 }

@@ -1,8 +1,11 @@
+const sd = require('silly-datetime'); //讀取silly-datetime模塊
+import { APIEmbedField } from "discord.js";
 import { Bot } from "mineflayer"
 import { Window } from 'prismarine-windows';
 import ItemVersions from 'prismarine-item';
 
 import { logger } from "./logger"
+import { TrackLog } from "../commands/main/tracker";
 
 export let Item:any;
 
@@ -38,4 +41,173 @@ export default function setItemVersion(bot:Bot)
 {
     logger.i(`進入setItemVersion，取得minecraft Item類型`)
     Item = ItemVersions(bot.version);
+}
+
+/**
+ * 添加千分位標記
+ * @param { number } number - 要轉換的數字
+ * @returns { string } 添加後的結果
+ */
+export function formatThousandths(number: number): string 
+{
+    logger.i("進入formatThousandths，添加千分位")
+    let comma = /\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g;
+    return number.toString().replace(comma, ',');
+}
+
+/**
+ * 格式化時間(天:小時:分:秒)
+ * @param { number } totalTime - 秒數
+ * @returns { string } 格式化後的時間
+ */
+export function formatTime(totalTime: number): string 
+{
+    logger.i("進入formatTime，格式化時間")
+    const days:number = Math.floor(totalTime / 86400); 
+    const hours:number = Math.floor((totalTime % 86400) / 3600);
+    const minutes:number = Math.floor((totalTime % 3600) / 60);
+    const seconds:number = totalTime % 60;
+  
+    let result:string = '';
+  
+    if (days > 0) 
+    {
+      result += `${days}天`;
+    }
+    if (hours > 0) 
+    {
+      result += `${hours}小時`;
+    }
+    if (minutes > 0) 
+    {
+      result += `${minutes}分`;
+    }
+    if (seconds > 0 || result === '') 
+    {
+      result += `${seconds}秒`;
+    }
+    logger.d(`回傳格式化時間結果: ${result}`)
+    return result;
+}
+
+/**
+ * 建立TrackLog Embed Field
+ * @param { TrackLog } track 拾取紀錄
+ * @returns { APIEmbedField[] } 欄位內容
+ */
+export function getDiscordTrackLogEmbedField(track:TrackLog):APIEmbedField[]
+{
+    //初始欄位 '\u200b'為空字元
+    const fields:APIEmbedField[] = [
+        {
+            name: '綠寶石儲存量:',
+            value: track.items.has("emerald") ? `${formatThousandths(track.items.get("emerald")!)}個` : "未拾取到綠寶石或沒有紀錄",
+        },
+        {
+            name:"開始時間:",
+            value:sd.format(track.startTime, 'YYYY/MM/DD HH:mm:ss'),
+            inline:false
+        },
+        {
+            name:"結束時間:",
+            value:sd.format(track.endTime, 'YYYY/MM/DD HH:mm:ss'),
+            inline:false
+        },
+        {
+            name:"總長度:",
+            value:formatTime(track.totalTime),
+            inline:false
+        },
+    ]
+    //添加物品
+    if(track.items.size !== 0)
+    {
+        //判斷是否已經放標題
+        let isPutTitle:boolean = false;
+        track.items.forEach((value,key)=>{
+            if(!isPutTitle)
+            {
+                //添加物品標題
+                fields.push({
+                    name:'物品一覽:',
+                    value:`${key}\n${formatThousandths(value)}個\n約${formatThousandths(Math.floor(value / 64))}組`,
+                    inline:true
+                })
+                isPutTitle = true
+            }
+            else
+            {
+                fields.push({
+                    name:'\u200b',
+                    value:`${key}\n${formatThousandths(value)}個\n約${formatThousandths(Math.floor(value / 64))}組`,
+                    inline:true
+                })
+            }
+        })
+
+        //填補空白
+        const remaind = track.items.size % 3;
+        for (let i = 1; i < remaind; i++) 
+        {
+            fields.push({
+                name: '\u200b',
+                value: '\u200b',
+                inline: true,
+            });
+        }
+    }
+    else
+    {
+        fields.push({
+            name:"物品一覽:",
+            value:'空',
+            inline:false
+        })
+    }
+    //添加效率
+    if(track.average.size !== 0)
+    {
+        //判斷是否已經放標題
+        let isPutTitle:boolean = false;
+        track.average.forEach((value,key)=>{
+            if(!isPutTitle)
+            {
+                //添加效率標題
+                fields.push({
+                    name:'效率一覽:',
+                    value:`${key}:\n${value}`,
+                    inline:true
+                })
+                isPutTitle = true;
+            }
+            else
+            {
+                fields.push({
+                    name:'\u200b',
+                    value:`${key}:\n${value}`,
+                    inline:true
+                })
+            }
+        })
+
+        //填補空白
+        const remaind = track.average.size % 3;
+        for (let i = 1; i < remaind; i++) {
+            fields.push({
+                name: '\u200b',
+                value: '\u200b',
+                inline: true,
+            });
+        }
+    }
+    else
+    {
+        fields.push({
+            name:"效率一覽:",
+            value:'空',
+            inline:true
+        })
+    }
+    
+    return fields;
 }

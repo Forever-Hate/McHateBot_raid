@@ -3,11 +3,13 @@ import { Setting } from '../../models/files';
 import { ReplyInterface } from '../../models/modules';
 import { localizer } from '../../utils/localization';
 import { logger } from '../../utils/logger';
-import { DiscordManager } from '../communicate/dc';
+import { discordManager } from '../communicate/dc';
+import { bot } from './bot';
+
+export let replyManager:ReplyController;
 
 export class ReplyController implements ReplyInterface
 {
-    discord:DiscordManager;
     settings:Setting;
     replyId: string = ""; // 回覆的ID
     clearReplyIdTimeout: NodeJS.Timeout | null = null; // 清除回覆ID的Timeout
@@ -15,11 +17,10 @@ export class ReplyController implements ReplyInterface
 
     /**
      * 非白名單內的回覆
-     * @param { Bot } bot - bot實例
      * @param { string } playerId - 發送訊息的玩家ID
      * @param { string } msg - 原始訊息
      */
-    noWhitelistedReply(bot: Bot, playerId: string, msg: string)
+    noWhitelistedReply(playerId: string, msg: string)
     {
         logger.i("進入noWhitelistedReply，處理非白名單內的訊息")
         //是否開啟回覆訊息
@@ -32,7 +33,7 @@ export class ReplyController implements ReplyInterface
             if (this.settings.enable_auto_reply) 
             {
                 logger.d("有開啟自動回覆")
-                _auto_reply(bot,playerId,this);
+                _auto_reply(playerId,this);
             } 
             else 
             {
@@ -50,7 +51,7 @@ export class ReplyController implements ReplyInterface
             if (reply.replyId !== playerId || reply.replyId === "") {
                 reply.replyId = playerId;
                 if (reply.settings.enable_discord_bot) {
-                    reply.discord.modify_replyId(playerId);
+                    discordManager.modify_replyId(playerId);
                 }
             }
 
@@ -62,7 +63,7 @@ export class ReplyController implements ReplyInterface
             reply.clearReplyIdTimeout = setTimeout(() => {
                 reply.replyId = "";
                 if (reply.settings.enable_discord_bot) {
-                    reply.discord.modify_replyId("");
+                    discordManager.modify_replyId("");
                 }
             }, reply.settings.clear_reply_id_delay_time * 1000);
 
@@ -70,7 +71,7 @@ export class ReplyController implements ReplyInterface
             {
                 logger.d("已開啟discord bot與直接轉發至DC")
                 bot.chat(`/m ${playerId} ${localizer.format("FORWARD_TO_DC",reply.map)}`);
-                reply.discord.send(playerId, msg.slice(8 + playerId.length));
+                discordManager.send(playerId, msg.slice(8 + playerId.length));
             } 
             else 
             {
@@ -98,7 +99,7 @@ export class ReplyController implements ReplyInterface
                     {
                         logger.d("已開啟discord bot，轉發至DC")
                         bot.chat(`/m ${playerId} ${localizer.format("FORWARD_TO_DC",reply.map)}`);
-                        reply.discord.send(playerId, msg.slice(8 + playerId.length));
+                        discordManager.send(playerId, msg.slice(8 + playerId.length));
                     }
                     bot.removeListener("message", _checkForwardIdOnline);
                 } 
@@ -112,11 +113,10 @@ export class ReplyController implements ReplyInterface
 
         /**
          * 內部函數，確認是否在時間範圍內，自動回覆訊息
-         * @param { Bot } bot - bot實例
          * @param { string } playerId - 發訊息的玩家ID
          * @param { ReplyController } reply - 自身實例
          */
-        function _auto_reply(bot:Bot,playerId:string,reply:ReplyController):void 
+        function _auto_reply(playerId:string,reply:ReplyController):void 
         {
             logger.i("進入_auto_reply，自動回覆訊息")
             //取得現在的時間
@@ -203,11 +203,12 @@ export class ReplyController implements ReplyInterface
     
     /**
      * 白名單內的回覆
-     * @param { Bot } bot - bot實例
      * @param { string } playerId - 發送訊息的玩家ID
      * @param { string } msg - 原始訊息
+     * @param { boolean | undefined } isfromdiscord - 是否從discord發送指令
+     * @returns { string } 錯誤/成功訊息
      */
-    whitelistedReply(bot: Bot, playerId: string, msg: string)
+    whitelistedReply(playerId:string, msg:string, isfromdiscord:boolean = false):string
     {
         logger.i("進入whitelistedReply，處理白名單訊息")
         //是否開啟回覆訊息
@@ -222,22 +223,59 @@ export class ReplyController implements ReplyInterface
                 if (this.settings.enable_discord_bot) 
                 {
                     logger.d("有開啟discord bot")
-                    this.discord.send(playerId, msg.slice(8 + playerId.length));
+                    discordManager.send(playerId, msg.slice(8 + playerId.length));
                 }
-                return;
+                return "";
             }
             if (this.replyId !== "") 
             {
                 logger.d(`要回覆的ID不為空，回覆ID為: ${this.replyId}`)
-                bot.chat(`/m ${this.replyId} ${msg.slice(8 + playerId.length)}`);
-                bot.chat(`/m ${playerId} ${localizer.format("REPLIED",this.map)}`);
+                if(!isfromdiscord)
+                {
+                    bot.chat(`/m ${this.replyId} ${msg.slice(8 + playerId.length)}`);
+                    bot.chat(`/m ${playerId} ${localizer.format("REPLIED",this.map)}`); 
+                }
+                else
+                {
+                    //如果從DC來的訊息，不需要切字串
+                    if(playerId === "")
+                    {
+                        logger.d("沒有指定回覆哪個玩家")
+                        bot.chat(`/m ${this.replyId} ${msg}`);  
+                    }
+                    else
+                    {
+                        logger.d("有指定回覆哪個玩家")
+                        bot.chat(`/m ${playerId} ${msg}`); 
+                    }
+                    
+                }
+                return localizer.format("REPLIED",this.map) as string;
             } 
             else 
             {
                 logger.d("要回覆的ID為空")
-                bot.chat(`/m ${playerId} ${localizer.format("NO_ONE_REPLIED",this.map)}`);
+                if(!isfromdiscord)
+                {
+                    bot.chat(`/m ${playerId} ${localizer.format("NO_ONE_REPLIED",this.map)}`);
+                }
+                else
+                {
+                    if(playerId !== "")
+                    {
+                        logger.d("有指定回覆哪個玩家")
+                        bot.chat(`/m ${playerId} ${msg}`);
+                        return localizer.format("REPLIED",this.map) as string; 
+                    }
+                }
+                return localizer.format("NO_ONE_REPLIED",this.map) as string;
             }
         }
+        if(isfromdiscord)
+        {
+            return localizer.format("DC_COMMAND_EXECUTED_FAIL",this.map) as string;
+        }
+        return "";
     };
 
     /**
@@ -250,11 +288,16 @@ export class ReplyController implements ReplyInterface
         this.map.set("player", this.replyId);
     }
 
-    constructor(discord:DiscordManager,settings:Setting)
+    constructor(settings:Setting)
     {
         logger.i("建立ReplyController物件")
-        this.discord = discord;
         this.settings = settings;
         this._setMap();
     }
+}
+
+export default function setReplyManager(settings:Setting)
+{
+    logger.i("進入setReplyManager，建立一個新的ReplyController物件")
+    replyManager = new ReplyController(settings)
 }

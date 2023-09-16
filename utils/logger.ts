@@ -16,8 +16,12 @@ export class Log implements LoggerInterface
    */
   writeErrorLog(e:any):void
   {
-    const time = sd.format(new Date(), 'YYYY/MM/DD HH:mm:ss');
-    fs.writeFileSync(`./logs/${time}.txt`, e.toString());
+    this.i("進入writeErrorLog，撰寫ErrorLog");
+    const time = sd.format(new Date(), 'YYYY-MM-DD-HH-mm-ss');
+    if (!fs.existsSync(`./logs/${time}.txt`))
+    {
+      fs.writeFileSync(`./logs/${time}.txt`, e.toString());
+    } 
   }
   /**
    * 寫入兌換紀錄log
@@ -27,6 +31,7 @@ export class Log implements LoggerInterface
    */
   writeExchangeLog(playerId: string, itemName: string, times: number):void
   {
+    this.i("進入writeExchangeLog，撰寫ExchangeLog");
     const time = sd.format(new Date(), 'YYYY/MM/DD HH:mm:ss');
     const logMessage = `時間: [${time}], 指令執行者: [${playerId}], 交換物品: [${itemName}], 交換次數:[${times}]\r\n`;
 
@@ -84,6 +89,22 @@ export class Log implements LoggerInterface
         fs.writeFileSync(`./track_logs/logs.txt`, JSON.stringify(logsObject, null, 2));
     }
   }
+
+  writePayLog(playerId:string,recipientId:string,expence:string,balance:string,reason:string):void
+  {
+    this.i("進入writePayLog，撰寫PayLog");
+    const time = sd.format(new Date(), 'YYYY/MM/DD HH:mm:ss');
+    const logMessage = `時間: [${time}]，轉帳ID: [${playerId}]，被轉帳人ID: [${recipientId}]，費用: [$${expence}元]，餘額: [$${balance}元]，理由: [${reason}]\r\n`;
+
+    if (fs.existsSync(`./pay_logs/logs.txt`)) 
+    {
+      fs.appendFileSync(`./pay_logs/logs.txt`, logMessage);
+    } 
+    else 
+    {
+      fs.writeFileSync(`./pay_logs/logs.txt`, logMessage);
+    }
+  }
   
   e(msg: any):void
   {
@@ -135,6 +156,13 @@ export class Log implements LoggerInterface
     {
       this.d("已開啟統計紀錄")
       fs.mkdir('./track_logs', { recursive: true }, (err) => {
+        if (err) throw err;
+      });
+    }
+    if(settings.enable_pay_log)
+    {
+      this.d("有開啟轉帳紀錄");
+      fs.mkdir('./pay_logs', { recursive: true }, (err) => {
         if (err) throw err;
       });
     }

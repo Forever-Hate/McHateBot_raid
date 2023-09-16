@@ -2,16 +2,17 @@ import { Config,Setting } from "./models/files";
 import * as dotenv from 'dotenv';
 import setLocalization, { localizer } from "./utils/localization";
 import setLogger,{ logger } from "./utils/logger";
-import { DiscardItemer } from "./commands/main/discarditem";
-import { RaidController } from "./commands/main/raid";
-import { Announcer } from "./commands/publicity/announcement";
-import { Informer } from "./commands/main/inform";
-import { ExchangeController } from "./commands/main/Exchange";
-import { ReplyController } from "./commands/main/reply";
-import { DiscordManager } from "./commands/communicate/dc";
-import { Tracker } from "./commands/main/tracker";
+import setDiscardItemer, { discardItemer } from "./commands/main/discarditem";
+import setRaid, { raid } from "./commands/main/raid";
+import setAnnouncer, { announcer } from "./commands/publicity/announcement";
+import setInformer, { informer } from "./commands/main/inform";
+import setExchangeManager, { exchangeManager } from "./commands/main/Exchange";
+import setReplyManager, { replyManager } from "./commands/main/reply";
+import setDiscordManager, { discordManager } from "./commands/communicate/dc";
+import setTracker, { tracker } from "./commands/main/tracker";
 import login,{ bot } from "./commands/main/bot";
 import setItemVersion from "./utils/util";
+import setFinancer, { financer } from "./commands/main/finance";
 
 try{
     //載入環境變數
@@ -21,14 +22,15 @@ try{
     const sd = require('silly-datetime');//讀取silly-datetime模塊
     setLogger(settings);
     setLocalization(config);
-    const discord:DiscordManager = new DiscordManager(settings)
-    const discard:DiscardItemer = new DiscardItemer(discord ,settings)
-    const raid:RaidController = new RaidController(discord ,settings)
-    const publicity:Announcer = new Announcer(settings)
-    const Inquire:Informer = new Informer()
-    const exchange:ExchangeController = new ExchangeController(discard, settings)
-    const reply:ReplyController = new ReplyController(discord, settings)
-    const tracker:Tracker = new Tracker(settings)
+    setDiscordManager(settings);
+    setDiscardItemer(settings);
+    setRaid(settings);
+    setAnnouncer(settings);
+    setInformer();
+    setExchangeManager(settings);
+    setReplyManager(settings)
+    setTracker(settings);
+    setFinancer(settings);
     const readline = require('readline');
     const rl = readline.createInterface({
         input: process.stdin,
@@ -36,7 +38,9 @@ try{
         terminal: false
     });
     const inventoryViewer = require('mineflayer-web-inventory')
-
+    /**
+     * 顯示歡迎旗幟在console
+     */
     function showWelcomeBanner()
     {
         (localizer.format("WELCOME_BANNER") as string[]).forEach((value,index)=>{
@@ -70,7 +74,7 @@ try{
             if (settings.enable_discord_bot) 
             {
                 logger.d("有開啟discord bot")
-                discord.login(bot)
+                discordManager.login()
             }
 
             if (settings.enable_attack) 
@@ -79,24 +83,24 @@ try{
                 if (settings.enable_discard) 
                 {
                     logger.d("有開啟丟垃圾")
-                    discard.discardItem(bot)
+                    discardItemer.discardItem()
                 }
                 if (settings.enable_detect_interrupt) 
                 {
                     logger.d("有開啟偵測突襲中斷")
-                    raid.detectInterruption(bot)
+                    raid.detectInterruption()
                 }
                 if (settings.enable_track)
                 {
                     logger.d("有開啟追蹤")
-                    tracker.track(bot);    
+                    tracker.track();    
                 }
-                raid.raid(bot)
+                raid.raid()
             }
             if (settings.enable_trade_announcement) 
             {
                 logger.d("有開啟宣傳")
-                publicity.startAnnounce(bot)
+                announcer.startAnnounce()
             }
         });
 
@@ -153,46 +157,71 @@ try{
                 if (whitelist.includes(`${playerId}`) || playerId === bot.username) {
                     switch (args[0]) { //指令前綴
                         case "cmd":
+                        {
                             bot.chat(match![2].slice(4))
                             break
-                        case "exp":  //查詢經驗值
-                            Inquire.experience(bot, playerId)
-                            break
+                        }
                         case "exchange": //經驗交換物品
-                            await exchange.exchange_item(bot, playerId, args)
+                        {
+                            await exchangeManager.exchange_item(playerId, args)
                             break
+                        }
                         case "stop": //停止交換物品
-                            exchange.stopExchange(bot, playerId)
+                        {
+                            exchangeManager.stopExchange(playerId)
                             break
+                        }
                         case "item": //查詢經驗能換多少物品
-                            exchange.inquire(bot, playerId, args)
+                        {
+                            exchangeManager.inquire(playerId, args)
                             break
+                        }
                         case "equip": //裝備整套裝備
-                            raid.equipped(bot)
+                        {
+                            raid.equipped()
                             break
+                        }
                         case "unequip": //脫下整套裝備
-                            raid.unequipped(bot)
+                        {
+                            raid.unequipped()
                             break
+                        }
                         case "switch": //更換宣傳詞
-                            publicity.switchAnnouncement(bot, playerId)
+                        {
+                            announcer.switchAnnouncement(playerId)
                             break
+                        }
                         case "throw": //丟棄所有物品
-                            await discard.discardAllItems(bot)
+                        {
+                            await discardItemer.discardAllItems()
                             break
+                        }
                         case "help": //取得指令幫助
-                            Inquire.help(bot, playerId)
+                        {
+                            informer.help(playerId)
                             break
+                        }
                         case "version": //查詢版本
-                            Inquire.version(bot, playerId)
+                        {
+                            informer.version(playerId)
                             break
+                        }
+                        case "exp":  //查詢經驗值
+                        {
+                            informer.experience(playerId)
+                            break
+                        }
                         case "about":  //關於此bot
-                            Inquire.about(bot, playerId)
+                        {
+                            informer.about(playerId)
                             break
+                        }
                         case "currentlog": //取得當前拾取紀錄log
+                        {
                             if(settings.enable_track)
                             {
                                 logger.d("有開啟追蹤")
-                                tracker.getCurrentTrackLog(bot,playerId, args);
+                                tracker.getCurrentTrackLog(playerId, args);
                             }
                             else
                             {
@@ -200,11 +229,13 @@ try{
                                 bot.chat(`/m ${playerId} ${localizer.format("TRACK_COMMAND_ERROR")}`)
                             }
                             break;
+                        }
                         case "fulllog": //取得所有拾取紀錄log
+                        {
                             if(settings.enable_track)
                             {
                                 logger.d("有開啟追蹤")
-                                tracker.getFullTrackLog(bot,playerId);
+                                tracker.getFullTrackLog(playerId);
                             }
                             else
                             {
@@ -212,19 +243,43 @@ try{
                                 bot.chat(`/m ${playerId} ${localizer.format("TRACK_COMMAND_ERROR")}`)
                             }
                             break;
+                        }
+                        case "pay": //轉帳
+                        {
+                            financer.pay(playerId,args);
+                            break;
+                        }
+                        case "payAll":
+                        case "payall": //轉帳所有錢
+                        {
+                            financer.payall(playerId,args);
+                            break;
+                        }
+                        case "money": //查詢餘額
+                        {
+                            financer.money(playerId);
+                            break;
+                        }
+                        case "cancelpay": //取消轉帳
+                        {
+                            financer.cancelPay(playerId);
+                            break;
+                        }
                         case "exit": //關閉bot
+                        {
                             bot.chat(`/m ${playerId} ${localizer.format("SHUTDOWN")}`)
                             console.log(`Shutdown in 10 seconds`)
                             setTimeout(function () {
                                 process.exit()
                             }, 10000)
                             break
+                        }
                         default: {
-                            reply.whitelistedReply(bot, playerId, msg)
+                            replyManager.whitelistedReply(playerId, msg)
                         }
                     }
                 } else {
-                    reply.noWhitelistedReply(bot, playerId, msg)
+                    replyManager.noWhitelistedReply(playerId, msg)
 
                 }
             }
@@ -241,7 +296,7 @@ try{
                     if (settings.enable_discord_bot) 
                     {
                         logger.d("有開啟discord bot，轉傳領地宣傳訊息")
-                        discord.send(localizer.format("DETECT_BROADCAST_MSG_PREFIX") as string, args)
+                        discordManager.send(localizer.format("DETECT_BROADCAST_MSG_PREFIX") as string, args)
                     }
                     if(settings.enable_reply_msg)
                     {
@@ -262,11 +317,11 @@ try{
             logger.l(`[資訊] 客戶端與伺服器斷線 ，10秒後將會自動重新連線...\n@${time1}`)
             if (settings.enable_trade_announcement) 
             {
-                publicity.stopAnnounceInterval();
+                announcer.stopAnnounceInterval();
             }
             if (settings.enable_discard) 
             {
-                discard.stopDiscardItemInterval();
+                discardItemer.stopDiscardItemInterval();
             }
             if (settings.enable_attack) 
             {
@@ -279,9 +334,9 @@ try{
             }
             if (settings.enable_track)
             {
-                tracker.trackDown(bot)
+                tracker.trackDown()
             }
-            exchange.errorStop()
+            exchangeManager.errorStop()
             setTimeout(function () {
                 connect(true);
             }, 10000)

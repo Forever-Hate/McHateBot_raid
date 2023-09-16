@@ -11,9 +11,9 @@ export interface Config {
 }
 //setting檔
 export interface Setting {
-    readonly forward_ID: string;
-    readonly forward_DC_ID: string;
     readonly enable_inventory_viewer:boolean;
+    readonly enable_detect_broadcast: boolean;
+    
     readonly enable_attack: boolean;
     readonly health: boolean;
     readonly Interval_ticks: number;
@@ -21,12 +21,12 @@ export interface Setting {
     readonly mob_list: string[];
     readonly enable_detect_interrupt: boolean;
     readonly check_raid_cycleTime: number;
-
+    
     readonly enable_track: boolean;
     readonly enable_track_log:boolean;
     readonly track_record:number;
-    readonly track_list:number[];
-
+    readonly track_list:string[];
+    
     readonly enable_discard: boolean;
     readonly enable_discard_msg: boolean;
     readonly discarditem_cycleTime: number;
@@ -38,6 +38,7 @@ export interface Setting {
     readonly enable_exchange_logs: boolean;
     readonly no_item_exchange_interval: number;
     readonly item_exchange_interval: number;
+    
     readonly enable_trade_announcement: boolean;
     readonly trade_announce_cycleTime: number;
     readonly enable_trade_content_cycle: boolean;
@@ -45,18 +46,24 @@ export interface Setting {
     readonly trade_content: string[][];
     // readonly enable_reconnect_tp: boolean;
     // readonly reconnect_tp_point: string;
-    readonly enable_detect_broadcast: boolean;
+    readonly enable_pay_log:boolean;
+    readonly transfer_interval:number;
+    
     readonly enable_reply_msg: boolean;
+    readonly forward_ID: string;
     readonly clear_reply_id_delay_time: number;
     readonly enable_auto_reply: boolean;
     readonly auto_reply_week: string;
     readonly auto_reply_time: string;
     readonly auto_reply_content: string;
+    
     readonly enable_discord_bot: boolean;
-    readonly discord_cmd_prefix: string;
+    readonly forward_DC_ID: string;
     readonly enable_send_msg_to_channel: boolean;
     readonly directly_send_msg_to_dc: boolean;
     readonly channel_ID: string;
+    readonly enable_slash_command:boolean;
+    readonly bot_application_ID:string;
     readonly bot_token: string;
 }
 // 語言檔
@@ -88,6 +95,7 @@ export interface Language {
     readonly EXCHANGE_FORMAT_ERROR: string;
     readonly EXCHANGE_START: string;
     readonly EXCHANGE_STOP: string;
+    readonly EXCHANGE_NOT_EXCHANGE_NOW:string;
     readonly EXCHANGE_BACKPACK_IS_FULL_ERROR: string;
     readonly EXCHANGE_INQUIRE_FORMAT_ERROR: string;
     readonly EXCHANGE_ITEM_INQUIRE: string;
@@ -104,9 +112,11 @@ export interface Language {
     readonly DC_BOT_OFFLINE: string;
     readonly DC_USER_FOUND: string;
     readonly DC_USER_NOT_FOUND: string;
+    readonly DC_SLASH_COMMAND_REGISTERED:string;
+    readonly DC_SLASH_COMMAND_NOT_REGISTERED:string;
     readonly DC_FORWARD_CHANNEL_NOT_FOUND: string;
     readonly DC_COMMAND_EXECUTED: string;
-    readonly DC_NO_MATCH_COMMAND: string;
+    readonly DC_COMMAND_EXECUTED_FAIL:string;
     readonly DC_NO_PERMISSION: string;
     readonly DC_RESPONSE_MSG: string;
 

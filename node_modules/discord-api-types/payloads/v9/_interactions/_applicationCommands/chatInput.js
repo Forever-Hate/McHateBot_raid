@@ -15,6 +15,7 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("./_chatInput/attachment"), exports);
+__exportStar(require("./_chatInput/base"), exports);
 __exportStar(require("./_chatInput/boolean"), exports);
 __exportStar(require("./_chatInput/channel"), exports);
 __exportStar(require("./_chatInput/integer"), exports);

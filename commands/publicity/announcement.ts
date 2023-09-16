@@ -1,10 +1,10 @@
-import { Bot } from "mineflayer";
-
 import { Setting } from "../../models/files";
 import { AnnounceInterface } from "../../models/modules";
 import { localizer } from "../../utils/localization";
 import { logger } from "../../utils/logger";
+import { bot } from "../main/bot";
 
+export let announcer:Announcer;
 
 export class Announcer implements AnnounceInterface
 {
@@ -17,9 +17,8 @@ export class Announcer implements AnnounceInterface
     announceInterval: NodeJS.Timer | null = null;
     /**
      * 設定一個Interval 進行宣傳
-     * @param { Bot } bot - bot實例
      */
-    startAnnounce(bot: Bot):void
+    startAnnounce():void
     {
         logger.i("進入startAnnounce，設定Interval進行宣傳")
         this.announceInterval = setInterval(() => {
@@ -96,17 +95,21 @@ export class Announcer implements AnnounceInterface
     }
     /**
      * 切換下一次的宣傳訊息
-     * @param { Bot } bot - bot實例
-     * @param { string } playerId - 下指定的玩家ID
+     * @param { string | undefined } playerId - 下指令的玩家ID
+     * @param { boolean | undefined } isfromdiscord 是否從discord發送指令
      */
-    switchAnnouncement(bot: Bot, playerId: string):void
+    switchAnnouncement(playerId: string | undefined,isfromdiscord:boolean | undefined = false):string[]
     {
         logger.i("進入switchAnnouncement，切換宣傳群組")
         if (this.settings.trade_content.length === 1) 
         {
             //設定映射值
             this._setMap()
-            bot.chat(`/m ${playerId} ${localizer.format("NEED_MORE_CONTENT", this.map)}`);
+            if(!isfromdiscord)
+            {
+               bot.chat(`/m ${playerId} ${localizer.format("NEED_MORE_CONTENT", this.map)}`); 
+            }
+            return [localizer.format("NEED_MORE_CONTENT", this.map) as string];
         } 
         else 
         {
@@ -118,18 +121,22 @@ export class Announcer implements AnnounceInterface
             this.trade_content = this.settings.trade_content[this.trade_content_index];
             //設定映射值
             this._setMap()
-            bot.chat(`/m ${playerId} ${localizer.format("NEXT_INDEX",this.map)}`);
-            bot.chat(`/m ${playerId} ${localizer.format("CONTENT",this.map)}`);
+            if(!isfromdiscord)
+            {
+                bot.chat(`/m ${playerId} ${localizer.format("NEXT_INDEX",this.map)}`);
+                bot.chat(`/m ${playerId} ${localizer.format("CONTENT",this.map)}`);
+            }
+            return [localizer.format("NEXT_INDEX",this.map) as string,localizer.format("CONTENT",this.map) as string];
         }
     }
-    
+
     /**
      * 內部函數，建立變數的映射值
      */
     _setMap() 
     {
         logger.i("設定變數的映射值")
-        this.map.set("trade_content_index", this.trade_content_index);
+        this.map.set("trade_content_index", this.trade_content_index+1);
         this.map.set("trade_content", this.trade_content);
     }
     
@@ -138,6 +145,12 @@ export class Announcer implements AnnounceInterface
         logger.i("建立Announcer物件")
         this.settings = settings;
     }
+}
+
+export default function setAnnouncer(settings:Setting)
+{
+    logger.i("進入setAnnouncer，建立一個新的Announcer物件")
+    announcer = new Announcer(settings);
 }
 
 

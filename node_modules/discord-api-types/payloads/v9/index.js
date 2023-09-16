@@ -17,6 +17,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("../common"), exports);
 __exportStar(require("./application"), exports);
 __exportStar(require("./auditLog"), exports);
+__exportStar(require("./autoModeration"), exports);
 __exportStar(require("./channel"), exports);
 __exportStar(require("./emoji"), exports);
 __exportStar(require("./gateway"), exports);

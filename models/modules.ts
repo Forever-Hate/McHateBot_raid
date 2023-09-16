@@ -1,4 +1,3 @@
-import { Bot } from "mineflayer";
 import { Setting } from "./files";
 import { Item } from "prismarine-item";
 
@@ -17,45 +16,50 @@ export interface LoggerInterface {
 }
 
 export interface DiscardItemInterface {
-    discardItem: (bot: Bot) => void;
+    discardItem: () => void;
     stopDiscardItemInterval: () => void;
-    tossTotemOfUndying: (bot: Bot) => Promise<void>;
-    discardAllItems: (bot: Bot) => Promise<void>;
-    tossItem: (bot:Bot, item:Item) => Promise<void>;
+    tossTotemOfUndying: () => Promise<void>;
+    discardAllItems: () => Promise<void>;
+    tossItem: (item:Item) => Promise<void>;
 }
 
 export interface RaidInterface {
-    raid: (bot: Bot) => void;
-    detectInterruption: (bot: Bot) => void;
+    raid: () => void;
+    detectInterruption: () => void;
     raidDown: () => void;
-    equipped: (bot: Bot) => void;
-    unequipped: (bot: Bot) => void;
+    equipped: () => void;
+    unequipped: () => void;
 }
 
 export interface AnnounceInterface {
-    startAnnounce: (bot: Bot, settings: Setting) => void;
+    startAnnounce: (settings: Setting) => void;
     stopAnnounceInterval: () => void;
-    switchAnnouncement: (bot: Bot, playerId: string, settings: Setting) => void;
+    switchAnnouncement: (playerId: string | undefined,isfromdiscord:boolean | undefined) => void;
 
 }
 
 export interface InformInterface {
-    experience: (bot: Bot, playerId: string) => void;
-    help: (bot: Bot, playerId: string) => void;
-    version: (bot: Bot, playerId: string) => void;
-    about: (bot: Bot, playerId: string) => void;
+    experience: (playerId: string | undefined,isfromdiscord:boolean | undefined) => string;
+    help: (playerId: string | undefined,isfromdiscord:boolean | undefined) => string[];
+    version: (playerId: string | undefined,isfromdiscord:boolean | undefined) => string;
+    about: (playerId: string | undefined,isfromdiscord:boolean | undefined) => string[];
 
 }
 
 export interface ReplyInterface {
-    noWhitelistedReply: (bot: Bot, playerId: string, msg: string) => void;
-    whitelistedReply: (bot: Bot, playerId: string, msg: string) => void;
+    noWhitelistedReply: (playerId: string, msg: string) => void;
+    whitelistedReply: (playerId: string, msg: string,isfromdiscord:boolean | undefined) => string;
 }
 
 export interface ExchangeInterface {
-    
-    exchange_item: (bot: Bot, playerId: string, args: string[]) => Promise<void>
-    stopExchange: (bot: Bot, playerId: string) => Promise<void>
+    exchange_item: (playerId: string, args: string[],isfromdiscord:boolean | undefined) => Promise<string>
+    stopExchange: (playerId: string ,isfromdiscord:boolean | undefined) => Promise<string>
     errorStop:() => void
-    inquire: (bot: Bot, playerId: string, args: string[]) => void
+    inquire: (playerId: string, args: string[]) => void
+}
+
+export interface FinanceInterface {
+    pay: (playerId:string,args:string[],isfromdiscord:boolean) => Promise<string>
+    payall:(playerId:string,args:string[],isfromdiscord:boolean) => Promise<string>
+    money:(playerId:string | undefined,isfromdiscord:boolean) => Promise<string>
 }

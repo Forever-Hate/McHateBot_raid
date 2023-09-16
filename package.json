@@ -1,13 +1,13 @@
 {
   "name": "mchatebot_raid",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "author": "I-love-minecraft#2437",
   "main": "McHateBot.ts",
   "scripts": {
     "build": "tsc && cpy .env out && cpy ./language out && cpy config-orginal.json out && cpy settings-orginal.json out && rename out\\config-orginal.json config.json && rename out\\settings-orginal.json settings.json && pkg ./out/McHateBot.js -t node18-win-x64 -c package.json && cpy config-orginal.json exe && cpy settings-orginal.json exe && cpy ./language exe && cpy .env exe && rename exe\\config-orginal.json config.json && rename exe\\settings-orginal.json settings.json"
   },
   "dependencies": {
-    "discord.js": "^13.6.0",
+    "discord.js": "^14.13.0",
     "dotenv": "^16.3.1",
     "minecraft-data": "^3.44.0",
     "mineflayer": "^4.14.0",
@@ -24,7 +24,8 @@
   "pkg": {
     "assets": [
       "/node_modules/mineflayer",
-      "./commands",
+      "/node_modules/discord.js",
+      "./out/commands/communicate/commands/**/*.js",
       "./utils",
       "./models",
       ".env"

@@ -1,29 +1,28 @@
-import { Bot } from 'mineflayer';
 import { Block } from "prismarine-block";
 
+import { bot } from './bot';
+import { discordManager } from '../communicate/dc';
+import { DiscardItemInterface } from '../../models/modules';
+import { get_window, Item } from '../../utils/util';
 import { Setting } from '../../models/files';
 import { logger } from '../../utils/logger';
 import { localizer } from '../../utils/localization';
-import { DiscardItemInterface } from '../../models/modules';
-import { Item, get_window } from '../../utils/util';
-import { DiscordManager } from '../communicate/dc';
 
+export let discardItemer:DiscardItemer;
 
 export class DiscardItemer implements DiscardItemInterface
 {
   settings: Setting;
-  discord: DiscordManager;
   discardItemInterval: NodeJS.Timer | null = null;
   /**
    * 丟棄設定檔裡設定值以外的物品
-   * @param { Bot } bot - bot的實例
   */
-  discardItem(bot: Bot):void
+  discardItem():void
   {
     logger.i("進入discardItem，建立丟垃圾的計時器")
     //建立一個計時器
     this.discardItemInterval = setInterval(async () => {
-      const checkTotemHasSet = await this._checkTotemHasSet(bot);
+      const checkTotemHasSet = await this._checkTotemHasSet();
       let stacked:boolean = false;
       let numOfEmerald:number = 0;
       if (this.settings.enable_discard_msg) 
@@ -65,7 +64,7 @@ export class DiscardItemer implements DiscardItemInterface
                     if(!stacked)
                     {
                       logger.d(`尚未疊加圖騰`)
-                      await this._stackTotem(bot)
+                      await this._stackTotem()
                       stacked = true;
                     }
                     else
@@ -94,7 +93,7 @@ export class DiscardItemer implements DiscardItemInterface
       if (numOfEmerald >= 1728)
       {
         logger.d(`已獲得指定數量的綠寶石，數量為: ${numOfEmerald}個，存入銀行`)
-        await this._saveEmerald(bot);
+        await this._saveEmerald();
       }
     }, this.settings.discarditem_cycleTime * 1000);
   }
@@ -112,9 +111,8 @@ export class DiscardItemer implements DiscardItemInterface
   }
   /**
    * 丟棄bot身上一格圖騰
-   * @param { Bot } bot - bot的實例
   */
-  async tossTotemOfUndying(bot: Bot):Promise<void>
+  async tossTotemOfUndying():Promise<void>
   {
     logger.i("進入tossTotemOfUndying，丟棄身上一格圖騰")
     for (const item of bot.inventory.items()) 
@@ -128,7 +126,7 @@ export class DiscardItemer implements DiscardItemInterface
     }
   }
 
-  async _saveEmerald(bot:Bot):Promise<void>
+  async _saveEmerald():Promise<void>
   {
     logger.i("進入_saveEmerald，儲存綠寶石")
     return new Promise(async (resolve) => {
@@ -146,9 +144,8 @@ export class DiscardItemer implements DiscardItemInterface
 
   /**
    * 內部函數，疊加圖騰
-   * @param { Bot } bot - bot實例 
    */
-  _stackTotem(bot:Bot):Promise<void>
+  _stackTotem():Promise<void>
   {
     return new Promise(async resolve => {
       logger.i("進入_stackTotem，疊加圖騰")
@@ -174,10 +171,9 @@ export class DiscardItemer implements DiscardItemInterface
   }
   /**
    * 內部函數，檢查圖騰是否有一組
-   * @param { Bot } bot - bot實例 
    * @returns { Promise<boolean> }
    */
-  async _checkTotemHasSet(bot:Bot):Promise<boolean>
+  async _checkTotemHasSet():Promise<boolean>
   {
     logger.i("進入_checkTotemHasSet，檢查身上是否有一組圖騰")
     return new Promise(resolve => {
@@ -197,7 +193,7 @@ export class DiscardItemer implements DiscardItemInterface
       if(this.settings.enable_totem_notifier)
       {
         logger.d("有開啟圖騰數量提醒")
-        if(numOfTotem <= 5)
+        if(numOfTotem < 5 && numOfTotem > 0)
         {
           logger.d("圖騰數量低於5個")
           if(this.settings.enable_reply_msg)
@@ -207,7 +203,7 @@ export class DiscardItemer implements DiscardItemInterface
             if(this.settings.enable_discord_bot)
             {
               logger.d("有開啟discord bot，提醒")
-              this.discord.send(bot.username,localizer.format("TOTEM_NOT_ENOUGH_ERROR") as string)
+              discordManager.send(bot.username,localizer.format("TOTEM_NOT_ENOUGH_ERROR") as string)
             }
           }
         }
@@ -219,9 +215,8 @@ export class DiscardItemer implements DiscardItemInterface
   
   /**
    * 丟棄bot身上所有的物品(不包含身上穿的盔甲)
-   * @param { Bot } bot - bot的實例
   */
-  async discardAllItems(bot: Bot):Promise<void>
+  async discardAllItems():Promise<void>
   {
     logger.i("進入discardAllItems，丟棄身上所有的物品(不包含身上穿的盔甲)")
     for (const item of bot.inventory.items()) 
@@ -232,10 +227,9 @@ export class DiscardItemer implements DiscardItemInterface
 
   /**
    * 丟棄bot身上指定的物品
-   * @param { Bot } bot - bot的實例
-   * @param {  typeof Item } item - 指定丟棄的物品
+   * @param { typeof Item } item - 指定丟棄的物品
    */
-  async tossItem(bot: Bot, item: typeof Item):Promise<void>
+  async tossItem(item: typeof Item):Promise<void>
   {
     logger.i("進入tossItem，丟棄身上指定的物品")
     for (const i of bot.inventory.items()) 
@@ -252,11 +246,16 @@ export class DiscardItemer implements DiscardItemInterface
     }
   }
 
-  constructor(discord:DiscordManager,settings: Setting)
+  constructor(settings: Setting)
   {
     logger.i("建立DiscardItemer物件")
-    this.discord = discord;
     this.settings = settings;
   }
   
+}
+
+export default function setDiscardItemer(settings: Setting)
+{
+  logger.i("進入setDiscardItemer，建立一個新的DiscardItemer物件")
+  discardItemer = new DiscardItemer(settings);
 }
