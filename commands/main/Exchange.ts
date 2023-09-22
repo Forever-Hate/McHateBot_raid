@@ -1,14 +1,12 @@
-import { Item } from 'prismarine-item';
 import { Window } from 'prismarine-windows';
 import { Entity } from 'prismarine-entity';
-import ItemVersions from 'prismarine-item';
+import ItemVersions,{ Item } from 'prismarine-item';
 
-import { Setting } from '../../models/files';
 import { ExchangeInterface } from '../../models/modules';
 import { localizer } from '../../utils/localization';
 import { logger } from '../../utils/logger';
 import { discardItemer } from './discarditem';
-import { get_window,formatThousandths } from '../../utils/util';
+import { get_window,formatThousandths, settings } from '../../utils/util';
 import { bot } from './bot';
 
 /**
@@ -40,7 +38,6 @@ export let exchangeManager:ExchangeController;
 
 export class ExchangeController implements ExchangeInterface
 {
-    settings:Setting;
     exchangeMap = new Map<string, choicedItem>(); 
     map = new Map<string, string>();
     exchangeFrequency = 0; //兌換次數
@@ -71,7 +68,7 @@ export class ExchangeController implements ExchangeInterface
         if (args.length === 2) {
             logger.d("指令參數為2")
             //如果有開啟自動丟垃圾，就先關閉
-            if (this.settings.enable_discard) 
+            if (settings.enable_discard) 
             {
                 logger.d("有開啟丟垃圾")
                 discardItemer.stopDiscardItemInterval()
@@ -149,20 +146,28 @@ export class ExchangeController implements ExchangeInterface
                 bot.chat(`/m ${playerId} ${localizer.format("EXCHANGE_STOP",this.map)}`);
             }
             //是否有開啟兌換紀錄
-            if (this.settings.enable_exchange_logs) 
+            if (settings.enable_exchange_logs) 
             {
                 logger.d("有開啟兌換紀錄")
                 logger.writeExchangeLog(playerId ?? bot.username, this.exchangedItem.item.name, this.exchangeFrequency);
             }
             //是否有開啟丟垃圾
-            if (this.settings.enable_discard) 
+            if (settings.enable_discard) 
             {
                 logger.d("有開啟丟垃圾")
                 discardItemer.discardItem();
             }
+            this.exchangedItem = undefined;
+            return localizer.format("EXCHANGE_STOP",this.map) as string;
         }
-        this.exchangedItem = undefined;
-        return localizer.format("EXCHANGE_NOT_EXCHANGE_NOW",this.map) as string;
+        else
+        {
+            if(!isfromdiscord)
+            {
+                bot.chat(`/m ${playerId} ${localizer.format("EXCHANGE_NOT_EXCHANGE_NOW",this.map)}`);
+            }
+            return localizer.format("EXCHANGE_NOT_EXCHANGE_NOW",this.map) as string;
+        }
     }
 
     /**
@@ -286,7 +291,7 @@ export class ExchangeController implements ExchangeInterface
             logger.d("繼續兌換")
             setTimeout(()=>{
                 this._exchange(playerId,item);
-            },(item.count === 0 ? this.settings.no_item_exchange_interval * 1000 : this.settings.item_exchange_interval * 1000))
+            },(item.count === 0 ? settings.no_item_exchange_interval * 1000 : settings.item_exchange_interval * 1000))
         }
     }
 
@@ -434,15 +439,14 @@ export class ExchangeController implements ExchangeInterface
         return undefined
     }
 
-    constructor(settings:Setting)
+    constructor()
     {
         logger.i("建立ExchangeController物件")
-        this.settings = settings;
     }
 }
 
-export default function setExchangeManager(settings:Setting)
+export default function setExchangeManager()
 {
     logger.i("進入setExchangeManager，建立一個新的ExchangeController物件")
-    exchangeManager = new ExchangeController(settings)
+    exchangeManager = new ExchangeController()
 }

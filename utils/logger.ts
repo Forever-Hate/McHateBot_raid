@@ -1,14 +1,13 @@
 import fs from "fs"; //讀取fs模塊
 
-import { Setting } from '../models/files';
 import { LoggerInterface } from '../models/modules';
 import { TrackLog } from "../commands/main/tracker";
+import { settings } from "./util";
 const sd = require('silly-datetime'); //讀取silly-datetime模塊
 export let logger:Log
 
 export class Log implements LoggerInterface
 {
-  settings:Setting
 
   /**
    * 寫入錯誤log
@@ -135,10 +134,9 @@ export class Log implements LoggerInterface
     console.log(msg);
   }
 
-  constructor(settings:Setting)
+  constructor()
   {
     this.i("建立Log物件")
-    this.settings = settings;
     //建立資料夾
     fs.mkdir('./logs', { recursive: true }, (err) => {
       if (err) throw err;
@@ -170,9 +168,9 @@ export class Log implements LoggerInterface
 
 }
 
-export default function setLogger(settings:Setting)
+export default function setLogger()
 {
-  logger = new Log(settings);
+  logger = new Log();
   logger.i("進入setLogger，建立一個新的Log物件")
 }
 

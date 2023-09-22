@@ -1,20 +1,19 @@
-import { Setting } from "../../models/files";
 import { AnnounceInterface } from "../../models/modules";
 import { localizer } from "../../utils/localization";
 import { logger } from "../../utils/logger";
+import { settings } from "../../utils/util";
 import { bot } from "../main/bot";
 
 export let announcer:Announcer;
 
 export class Announcer implements AnnounceInterface
 {
-    settings:Setting;
     trade_content: string[] = []; // 宣傳文字
     trade_content_index: number = 0; // 宣傳文字index
     skip_count: number = 0; // 該訊息被跳過的次數
     now_trade_content_cycle_index: number = 0; // 當前循環的 index
     map: Map<string, number | string[]> = new Map();
-    announceInterval: NodeJS.Timer | null = null;
+    announceInterval: NodeJS.Timeout | null = null;
     /**
      * 設定一個Interval 進行宣傳
      */
@@ -22,7 +21,7 @@ export class Announcer implements AnnounceInterface
     {
         logger.i("進入startAnnounce，設定Interval進行宣傳")
         this.announceInterval = setInterval(() => {
-        this.trade_content = this.settings.trade_content[this.trade_content_index]; // 初始化宣傳文字
+        this.trade_content = settings.trade_content[this.trade_content_index]; // 初始化宣傳文字
         //將每一句間隔0.5秒發送出去
         this.trade_content.forEach((c, index) => {
             setTimeout(()=>{
@@ -31,28 +30,28 @@ export class Announcer implements AnnounceInterface
         });
 
         //是否有開啟訊息循環
-        if (this.settings.enable_trade_content_cycle)
+        if (settings.enable_trade_content_cycle)
         {
             logger.d("開啟循環播送宣傳訊息")
             //是否顯示特殊訊息次數為1
-            if (this.settings.content_skip_count === 1) 
+            if (settings.content_skip_count === 1) 
             {
                 logger.d("顯示特殊訊息次數為1")
                 //換下一個訊息群組
                 this.trade_content_index = this.trade_content_index + 1;
                 //是否訊息群組已經播送到最後一個
-                if (this.trade_content_index === this.settings.trade_content.length) 
+                if (this.trade_content_index === settings.trade_content.length) 
                 {
                     this.trade_content_index = 0;
                 }
             } 
             else
             {
-                logger.d(`顯示特殊訊息次數不為1 設定值為:${this.settings.content_skip_count}`)
+                logger.d(`顯示特殊訊息次數不為1 設定值為:${settings.content_skip_count}`)
                 //顯示特殊訊息次數+1
                 this.skip_count = this.skip_count + 1;
                 //是否顯示特殊訊息次數已到設定值
-                if (this.skip_count === this.settings.content_skip_count) 
+                if (this.skip_count === settings.content_skip_count) 
                 {
                     this.now_trade_content_cycle_index = this.trade_content_index;
                     this.trade_content_index = 0;
@@ -64,7 +63,7 @@ export class Announcer implements AnnounceInterface
                     if (this.skip_count === 1) // 剛顯示過特殊訊息
                     {
                         this.trade_content_index = this.now_trade_content_cycle_index + 1;
-                        if (this.trade_content_index === this.settings.trade_content.length) 
+                        if (this.trade_content_index === settings.trade_content.length) 
                         {
                             this.trade_content_index = 1;
                         }
@@ -72,7 +71,7 @@ export class Announcer implements AnnounceInterface
                     else 
                     {
                         this.trade_content_index = this.trade_content_index + 1;
-                        if (this.trade_content_index === this.settings.trade_content.length) 
+                        if (this.trade_content_index === settings.trade_content.length) 
                         {
                             this.trade_content_index = 1;
                         }
@@ -80,8 +79,9 @@ export class Announcer implements AnnounceInterface
                 }
             }
         }
-        }, this.settings.trade_announce_cycleTime * 1000);
+        }, settings.trade_announce_cycleTime * 1000);
     }
+    
     /**
      * 停止宣傳Interval
      */
@@ -93,6 +93,17 @@ export class Announcer implements AnnounceInterface
             clearInterval(this.announceInterval);
         }
     }
+
+    /**
+     * 重新更新宣傳Interval
+     */
+    reloadAnnounce():void
+    {
+        logger.i("進入reloadAnnounce，重新更新宣傳Interval")
+        this.stopAnnounceInterval()
+        this.startAnnounce()
+    }
+
     /**
      * 切換下一次的宣傳訊息
      * @param { string | undefined } playerId - 下指令的玩家ID
@@ -101,7 +112,7 @@ export class Announcer implements AnnounceInterface
     switchAnnouncement(playerId: string | undefined,isfromdiscord:boolean | undefined = false):string[]
     {
         logger.i("進入switchAnnouncement，切換宣傳群組")
-        if (this.settings.trade_content.length === 1) 
+        if (settings.trade_content.length === 1) 
         {
             //設定映射值
             this._setMap()
@@ -114,11 +125,11 @@ export class Announcer implements AnnounceInterface
         else 
         {
             this.trade_content_index = this.trade_content_index + 1;
-            if (this.trade_content_index === this.settings.trade_content.length) 
+            if (this.trade_content_index === settings.trade_content.length) 
             {
                 this.trade_content_index = 0;
             }
-            this.trade_content = this.settings.trade_content[this.trade_content_index];
+            this.trade_content = settings.trade_content[this.trade_content_index];
             //設定映射值
             this._setMap()
             if(!isfromdiscord)
@@ -140,17 +151,16 @@ export class Announcer implements AnnounceInterface
         this.map.set("trade_content", this.trade_content);
     }
     
-    constructor(settings:Setting)
+    constructor()
     {
         logger.i("建立Announcer物件")
-        this.settings = settings;
     }
 }
 
-export default function setAnnouncer(settings:Setting)
+export default function setAnnouncer()
 {
     logger.i("進入setAnnouncer，建立一個新的Announcer物件")
-    announcer = new Announcer(settings);
+    announcer = new Announcer();
 }
 
 

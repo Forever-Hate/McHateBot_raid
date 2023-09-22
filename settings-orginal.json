@@ -63,10 +63,11 @@
   "auto_reply_content": "",
   
   "enable_discord_bot": false,
-  "forward_DC_ID": "請填入要接收轉發訊息的DC使用者ID(enable_discord_bot:true 就需要填寫)",
+  "forward_DC_ID": ["請填入要接收轉發訊息的DC使用者ID(enable_discord_bot:true 就需要填寫)"],
   "enable_send_msg_to_channel": false,
   "directly_send_msg_to_dc": false,
   "channel_ID": "enable_send_msg_to_channel:true 就需要填寫",
+  "embed_thumbnail_url":"https://static.wikia.nocookie.net/minecraft_gamepedia/images/a/a9/Emerald_Ore_JE4_BE3.png",
   "enable_slash_command":false,
   "bot_application_ID":"enable_slash_command:true 就需要填寫",
   "bot_token": "enable_discord_bot:true 就需要填寫"

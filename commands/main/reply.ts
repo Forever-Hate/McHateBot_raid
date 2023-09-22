@@ -1,16 +1,14 @@
-import { Bot } from 'mineflayer';
-import { Setting } from '../../models/files';
 import { ReplyInterface } from '../../models/modules';
 import { localizer } from '../../utils/localization';
 import { logger } from '../../utils/logger';
 import { discordManager } from '../communicate/dc';
 import { bot } from './bot';
+import { settings } from '../../utils/util';
 
 export let replyManager:ReplyController;
 
 export class ReplyController implements ReplyInterface
 {
-    settings:Setting;
     replyId: string = ""; // 回覆的ID
     clearReplyIdTimeout: NodeJS.Timeout | null = null; // 清除回覆ID的Timeout
     map: Map<string, string> = new Map<string, string>();
@@ -24,13 +22,13 @@ export class ReplyController implements ReplyInterface
     {
         logger.i("進入noWhitelistedReply，處理非白名單內的訊息")
         //是否開啟回覆訊息
-        if (this.settings.enable_reply_msg) 
+        if (settings.enable_reply_msg) 
         {
             logger.d("有開啟回覆訊息")
             this.replyId = playerId;
             this._setMap();
             //是否開啟自動回覆
-            if (this.settings.enable_auto_reply) 
+            if (settings.enable_auto_reply) 
             {
                 logger.d("有開啟自動回覆")
                 _auto_reply(playerId,this);
@@ -50,7 +48,7 @@ export class ReplyController implements ReplyInterface
             logger.i("進入_forward_msg，處理轉發訊息")
             if (reply.replyId !== playerId || reply.replyId === "") {
                 reply.replyId = playerId;
-                if (reply.settings.enable_discord_bot) {
+                if (settings.enable_discord_bot) {
                     discordManager.modify_replyId(playerId);
                 }
             }
@@ -62,12 +60,12 @@ export class ReplyController implements ReplyInterface
             }
             reply.clearReplyIdTimeout = setTimeout(() => {
                 reply.replyId = "";
-                if (reply.settings.enable_discord_bot) {
+                if (settings.enable_discord_bot) {
                     discordManager.modify_replyId("");
                 }
-            }, reply.settings.clear_reply_id_delay_time * 1000);
+            }, settings.clear_reply_id_delay_time * 1000);
 
-            if (reply.settings.enable_discord_bot && reply.settings.directly_send_msg_to_dc) 
+            if (settings.enable_discord_bot && settings.directly_send_msg_to_dc) 
             {
                 logger.d("已開啟discord bot與直接轉發至DC")
                 bot.chat(`/m ${playerId} ${localizer.format("FORWARD_TO_DC",reply.map)}`);
@@ -76,10 +74,10 @@ export class ReplyController implements ReplyInterface
             else 
             {
                 logger.d("未開啟discord bot或直接轉發至DC，轉發至遊戲")
-                if(reply.settings.enable_reply_msg)
+                if(settings.enable_reply_msg)
                 {
                     logger.d("有開啟回覆訊息")
-                    bot.chat(`/m ${reply.settings.forward_ID} ${localizer.format("FORWARDED_IN_GAME",reply.map)}: ${msg.slice(8 + playerId.length)}`); 
+                    bot.chat(`/m ${settings.forward_ID} ${localizer.format("FORWARDED_IN_GAME",reply.map)}: ${msg.slice(8 + playerId.length)}`); 
                     bot.on("message", _checkForwardIdOnline);
                 }
             }
@@ -95,7 +93,7 @@ export class ReplyController implements ReplyInterface
                 {
                     logger.d("指定的轉發ID不在線上")
                     bot.chat(`/m ${playerId} ${localizer.format("OFFLINE",reply.map)}`);
-                    if (reply.settings.enable_discord_bot) 
+                    if (settings.enable_discord_bot) 
                     {
                         logger.d("已開啟discord bot，轉發至DC")
                         bot.chat(`/m ${playerId} ${localizer.format("FORWARD_TO_DC",reply.map)}`);
@@ -124,10 +122,10 @@ export class ReplyController implements ReplyInterface
             const weekRegex: RegExp = /[1-7]-[1-7]/;
             
             //是否為正確的格式
-            if (weekRegex.test(reply.settings.auto_reply_week)) 
+            if (weekRegex.test(settings.auto_reply_week)) 
             {
                 logger.d("一周時間為正確格式")
-                const s: string[] = reply.settings.auto_reply_week.split("-");
+                const s: string[] = settings.auto_reply_week.split("-");
                 let min: number = parseInt(s[0]);
                 let max: number = parseInt(s[1]);
                 let day: number = today.getDay();
@@ -148,11 +146,11 @@ export class ReplyController implements ReplyInterface
                 {
                     const hourRegex: RegExp = /[0-2][0-9]:[0-5][0-9]-[0-2][0-9]:[0-5][0-9]/;
                     //是否為正確的格式
-                    if (hourRegex.test(reply.settings.auto_reply_time)) 
+                    if (hourRegex.test(settings.auto_reply_time)) 
                     {
                         //當前時間的0點
                         const today0: Date = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 24, 0, 0, 0);
-                        const x: string[] = reply.settings.auto_reply_time.split("-");
+                        const x: string[] = settings.auto_reply_time.split("-");
                         let min_time: Date = new Date(today.getFullYear(), today.getMonth(), today.getDate(), parseInt(x[0].split(":")[0]), parseInt(x[0].split(":")[1]), 0, 0);
                         let max_time: Date = new Date(today.getFullYear(), today.getMonth(), today.getDate(), parseInt(x[1].split(":")[0]), parseInt(x[1].split(":")[1]), 0, 0);
 
@@ -174,7 +172,7 @@ export class ReplyController implements ReplyInterface
                         if (today >= min_time && today <= max_time) 
                         {   
                             //自動回覆訊息
-                            bot.chat(`/m ${playerId} ${reply.settings.auto_reply_content}`);
+                            bot.chat(`/m ${playerId} ${settings.auto_reply_content}`);
                         } 
                         else 
                         {
@@ -212,7 +210,7 @@ export class ReplyController implements ReplyInterface
     {
         logger.i("進入whitelistedReply，處理白名單訊息")
         //是否開啟回覆訊息
-        if (this.settings.enable_reply_msg) 
+        if (settings.enable_reply_msg) 
         {
             logger.d("有開啟回覆訊息")
             this._setMap();
@@ -220,7 +218,7 @@ export class ReplyController implements ReplyInterface
             {
                 logger.d("傳送訊息的為bot自己")
                 //是否開啟discord機器人
-                if (this.settings.enable_discord_bot) 
+                if (settings.enable_discord_bot) 
                 {
                     logger.d("有開啟discord bot")
                     discordManager.send(playerId, msg.slice(8 + playerId.length));
@@ -284,20 +282,19 @@ export class ReplyController implements ReplyInterface
     _setMap() 
     {
         logger.i("設定變數的映射值")
-        this.map.set("forward_id", this.settings.forward_ID);
+        this.map.set("forward_id", settings.forward_ID);
         this.map.set("player", this.replyId);
     }
 
-    constructor(settings:Setting)
+    constructor()
     {
         logger.i("建立ReplyController物件")
-        this.settings = settings;
         this._setMap();
     }
 }
 
-export default function setReplyManager(settings:Setting)
+export default function setReplyManager()
 {
     logger.i("進入setReplyManager，建立一個新的ReplyController物件")
-    replyManager = new ReplyController(settings)
+    replyManager = new ReplyController()
 }

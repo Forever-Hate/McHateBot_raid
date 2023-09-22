@@ -3,8 +3,7 @@ import { Block } from "prismarine-block";
 import { bot } from './bot';
 import { discordManager } from '../communicate/dc';
 import { DiscardItemInterface } from '../../models/modules';
-import { get_window, Item } from '../../utils/util';
-import { Setting } from '../../models/files';
+import { get_window, Item, settings } from '../../utils/util';
 import { logger } from '../../utils/logger';
 import { localizer } from '../../utils/localization';
 
@@ -12,8 +11,7 @@ export let discardItemer:DiscardItemer;
 
 export class DiscardItemer implements DiscardItemInterface
 {
-  settings: Setting;
-  discardItemInterval: NodeJS.Timer | null = null;
+  discardItemInterval: NodeJS.Timeout | null = null;
   /**
    * 丟棄設定檔裡設定值以外的物品
   */
@@ -25,7 +23,7 @@ export class DiscardItemer implements DiscardItemInterface
       const checkTotemHasSet = await this._checkTotemHasSet();
       let stacked:boolean = false;
       let numOfEmerald:number = 0;
-      if (this.settings.enable_discard_msg) 
+      if (settings.enable_discard_msg) 
       {
         logger.d("已開啟丟垃圾訊息")
         logger.l(localizer.format("DISCARD_MSG") as string)
@@ -34,10 +32,10 @@ export class DiscardItemer implements DiscardItemInterface
       {
         if (item !== null) 
         {
-          if (!this.settings.stayItem_list.includes(item.name)) 
+          if (!settings.stayItem_list.includes(item.name)) 
           {
             logger.d(`${item.name} 不包含在不要丟掉的清單內`)
-            if(this.settings.enable_stay_totem)
+            if(settings.enable_stay_totem)
             {
               logger.d("有開啟保留圖騰")
               if (item.name === "totem_of_undying")
@@ -58,7 +56,7 @@ export class DiscardItemer implements DiscardItemInterface
                 else
                 {
                   logger.d(`尚未超過一組圖騰`)
-                  if(this.settings.enable_auto_stack_totem)
+                  if(settings.enable_auto_stack_totem)
                   {
                     logger.d(`有開啟自動堆疊圖騰`)
                     if(!stacked)
@@ -95,7 +93,18 @@ export class DiscardItemer implements DiscardItemInterface
         logger.d(`已獲得指定數量的綠寶石，數量為: ${numOfEmerald}個，存入銀行`)
         await this._saveEmerald();
       }
-    }, this.settings.discarditem_cycleTime * 1000);
+    }, settings.discarditem_cycleTime * 1000);
+  }
+  /**
+   * 重新更新discardItemInterval
+  */
+  reloadDiscardItem():void
+  {
+    if(this.discardItemInterval)
+    {
+      clearInterval(this.discardItemInterval)
+    }
+    this.discardItem()
   }
   /**
    * 停止丟棄物品的Interval
@@ -190,17 +199,17 @@ export class DiscardItemer implements DiscardItemInterface
           }
         }
       }
-      if(this.settings.enable_totem_notifier)
+      if(settings.enable_totem_notifier)
       {
         logger.d("有開啟圖騰數量提醒")
         if(numOfTotem < 5 && numOfTotem > 0)
         {
           logger.d("圖騰數量低於5個")
-          if(this.settings.enable_reply_msg)
+          if(settings.enable_reply_msg)
           {
             logger.d("有開啟回覆訊息，提醒")
-            bot.chat(`/m ${this.settings.forward_ID} ${localizer.format("TOTEM_NOT_ENOUGH_ERROR") as string}`)
-            if(this.settings.enable_discord_bot)
+            bot.chat(`/m ${settings.forward_ID} ${localizer.format("TOTEM_NOT_ENOUGH_ERROR") as string}`)
+            if(settings.enable_discord_bot)
             {
               logger.d("有開啟discord bot，提醒")
               discordManager.send(bot.username,localizer.format("TOTEM_NOT_ENOUGH_ERROR") as string)
@@ -246,16 +255,15 @@ export class DiscardItemer implements DiscardItemInterface
     }
   }
 
-  constructor(settings: Setting)
+  constructor()
   {
     logger.i("建立DiscardItemer物件")
-    this.settings = settings;
   }
   
 }
 
-export default function setDiscardItemer(settings: Setting)
+export default function setDiscardItemer()
 {
   logger.i("進入setDiscardItemer，建立一個新的DiscardItemer物件")
-  discardItemer = new DiscardItemer(settings);
+  discardItemer = new DiscardItemer();
 }

@@ -1,8 +1,7 @@
 import { FinanceInterface } from "../../models/modules";
 import { logger } from "../../utils/logger";
 import { localizer } from "../../utils/localization";
-import { formatThousandths } from "../../utils/util";
-import { Setting } from "../../models/files";
+import { formatThousandths, settings } from "../../utils/util";
 import { bot } from "./bot";
 
 
@@ -11,7 +10,6 @@ export let financer:Financer
 
 export class Financer implements FinanceInterface
 {
-    settings:Setting;
     map:Map<string,string> = new Map();
     balance:number = 0; //金錢餘額
     expence:number = 0; //轉帳金額
@@ -225,7 +223,7 @@ export class Financer implements FinanceInterface
                 bot.chat(`/m ${this.playerId} ${localizer.format("FINANCE_PAY_COMPLETE",this.map)}`)
             }
 
-            if (this.settings.enable_pay_log)
+            if (settings.enable_pay_log)
             {
                 logger.d("有開啟轉帳紀錄");
                 logger.writePayLog(this.playerId,this.recipientId,formatThousandths(this.expence),formatThousandths(this.balance),this.reason)
@@ -272,7 +270,7 @@ export class Financer implements FinanceInterface
                 this.transferTimeout = setTimeout(async ()=> {
                     this.isRepeatTransfer = true;
                     resolve(await this._transfer(isfromdiscord))
-                },this.settings.transfer_interval * 1000)
+                },settings.transfer_interval * 1000)
             })
         }
         else
@@ -304,21 +302,20 @@ export class Financer implements FinanceInterface
         this.map.set("expence",formatThousandths(this.expence));
         this.map.set("reason",this.reason);
         this.map.set("player",this.playerId)
-        this.map.set("interval",this.settings.transfer_interval.toString());
+        this.map.set("interval",settings.transfer_interval.toString());
         this.map.set("client",this.recipientId);
     }
 
-    constructor(settings:Setting)
+    constructor()
     {
         logger.i("建立Financer物件");
-        this.settings = settings;
     }
     
 }
 
-export default function setFinancer(settings:Setting)
+export default function setFinancer()
 {
     logger.i("進入setFinancer，建立一個新的Financer物件");
-    financer = new Financer(settings);
+    financer = new Financer();
 }
 

@@ -3,7 +3,6 @@ export interface Config {
     readonly ip: string,
     readonly port: number,
     readonly username: string,
-    readonly password: string,
     readonly version:string,
     readonly auth: string,
     readonly language: string,
@@ -58,10 +57,11 @@ export interface Setting {
     readonly auto_reply_content: string;
     
     readonly enable_discord_bot: boolean;
-    readonly forward_DC_ID: string;
+    readonly forward_DC_ID: string[];
     readonly enable_send_msg_to_channel: boolean;
     readonly directly_send_msg_to_dc: boolean;
     readonly channel_ID: string;
+    readonly embed_thumbnail_url:string;
     readonly enable_slash_command:boolean;
     readonly bot_application_ID:string;
     readonly bot_token: string;

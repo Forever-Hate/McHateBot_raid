@@ -1,10 +1,10 @@
-import { Client, Partials,IntentsBitField, TextChannel, User, Message, ChannelType, Collection, Events, REST, Routes } from 'discord.js';
+import { Client, Partials,IntentsBitField, TextChannel, User, Collection, Events, REST, Routes } from 'discord.js';
 import { localizer } from '../../utils/localization';
-import { Setting } from '../../models/files';
 import { logger } from '../../utils/logger';
-import fs from 'node:fs';
-import path from 'node:path';
+import fs from 'fs';
+import path from 'path';
 import { bot } from '../main/bot';
+import { settings } from '../../utils/util';
 
 const intents = new IntentsBitField(['Guilds', 'GuildMessages', 'DirectMessages']);
 const client = new Client({ intents: intents, partials: [Partials.Channel] });
@@ -22,7 +22,6 @@ export let discordManager:DiscordManager;
 
 export class DiscordManager
 {
-    settings:Setting;
 
     replyId:string = ""; //回覆的玩家ID
     map:Map<string, string> = new Map(); 
@@ -42,10 +41,10 @@ export class DiscordManager
    send (sender: string, msg: string):void
    {
        logger.i("進入send，發送訊息至DC")
-       if (this.settings.enable_send_msg_to_channel) 
+       if (settings.enable_send_msg_to_channel) 
        {
            logger.d("開啟訊息轉發至頻道")
-            const channel: TextChannel | null = client.channels.cache.get(this.settings.channel_ID) as TextChannel | null;
+            const channel: TextChannel | null = client.channels.cache.get(settings.channel_ID) as TextChannel | null;
             if (!channel) 
             {
                 logger.d("找不到頻道")
@@ -67,7 +66,7 @@ export class DiscordManager
         else 
         {
             logger.d("開啟訊息轉發至私訊")
-            client.users.fetch(this.settings.forward_DC_ID).then((user: User) => {
+            client.users.fetch(settings.forward_DC_ID[0]).then((user: User) => {
                 if (sender === "") 
                 {
                     logger.d("bot自己傳訊息")
@@ -97,40 +96,57 @@ export class DiscordManager
             this._setMap();
             logger.l(`${localizer.format("DC_BANNER",this.map)}`);
             logger.l(`${localizer.format("DC_BOT_ONLINE",this.map)}`);
-            const user = await client.users.fetch(this.settings.forward_DC_ID)
+            const user = await client.users.fetch(settings.forward_DC_ID[0])
             if (!user) {
                 logger.l(`${localizer.format("DC_USER_NOT_FOUND",this.map)}`);
                 throw new DiscordBotException("Discord User Not Found");
             } else {
                 logger.l(`${localizer.format("DC_USER_FOUND",this.map)}`);
             }
-            if(this.settings.enable_slash_command)
+            if(settings.enable_slash_command)
             {
                 logger.d("有開啟DC應用程式(/)指令")
                 this.numOfCommand = await this._setSlashCommand();
                 this._setMap();
                 client.on(Events.InteractionCreate, async interaction => {
-                    if (!interaction.isChatInputCommand()) return;
-                    if(interaction.user.id !== this.settings.forward_DC_ID)
+                    if (interaction.isChatInputCommand())
                     {
-                        interaction.reply({content:`${localizer.format("DC_NO_PERMISSION",this.map)}`,ephemeral:true})
-                        return
+                        if(!settings.forward_DC_ID.includes(interaction.user.id))
+                        {
+                            interaction.reply({content:`${localizer.format("DC_NO_PERMISSION",this.map)}`,ephemeral:true})
+                            return
+                        }
+
+                        const command = interaction.client.commands.get(interaction.commandName);
+                 
+                        if (!command) {
+                            logger.e(`未找到指令 ${interaction.commandName} `);
+                            return;
+                        }
+                 
+                        try {
+                            await command.execute(interaction,bot);
+                        } catch (error) {
+                            logger.e(error);
+                            if (interaction.replied || interaction.deferred) {
+                                await interaction.followUp({ content: '執行指令時發生錯誤!', ephemeral: true });
+                            } else {
+                                await interaction.reply({ content: '執行指令時發生錯誤!', ephemeral: true });
+                            }
+                        }
                     }
-                    const command = interaction.client.commands.get(interaction.commandName);
-             
-                    if (!command) {
-                        logger.e(`未找到指令 ${interaction.commandName} `);
-                        return;
-                    }
-             
-                    try {
-                        await command.execute(interaction,bot);
-                    } catch (error) {
-                        logger.e(error);
-                        if (interaction.replied || interaction.deferred) {
-                            await interaction.followUp({ content: '執行指令時發生錯誤!', ephemeral: true });
-                        } else {
-                            await interaction.reply({ content: '執行指令時發生錯誤!', ephemeral: true });
+                    else if (interaction.isAutocomplete()) {
+                        const command = interaction.client.commands.get(interaction.commandName);
+                
+                        if (!command) {
+                            logger.e(`未找到指令 ${interaction.commandName} `);
+                            return;
+                        }
+                
+                        try {
+                            await command.autocomplete(interaction);
+                        } catch (error) {
+                            logger.e(error);
                         }
                     }
                 });
@@ -142,7 +158,7 @@ export class DiscordManager
                 logger.l(`${localizer.format("DC_SLASH_COMMAND_NOT_REGISTERED",this.map)}`)
             }
             logger.l(`${localizer.format("DC_BANNER",this.map)}`);
-            // if (this.settings.enable_reply_msg) 
+            // if (settings.enable_reply_msg) 
             // {
             //     logger.d("有開啟回覆訊息")
             //     client.on(Events.MessageCreate, (msg: Message) => {
@@ -152,23 +168,23 @@ export class DiscordManager
             //             logger.d("messageCreate:第一種情況 bot自己傳訊息");
             //             return;
             //         }
-            //         if (msg.channel?.id !== this.settings.channel_ID && msg.channel?.type !== ChannelType.DM)
+            //         if (msg.channel?.id !== settings.channel_ID && msg.channel?.type !== ChannelType.DM)
             //         {
             //             logger.d("messageCreate:第二種情況 非指定頻道發訊息且不是私訊");
             //             return;
             //         }
-            //         if (msg.author?.id !== this.settings.forward_DC_ID) 
+            //         if (msg.author?.id !== settings.forward_DC_ID) 
             //         {
             //             logger.d("messageCreate:第三種情況 不是指定的DC用戶發訊息至指定頻道");
             //             msg.channel.send(`${localizer.format("DC_NO_PERMISSION",this.map)}`);
             //             return;
             //         }
-            //         if ((msg.channel.type === ChannelType.DM || msg.channel.type === ChannelType.GuildText) && msg.author?.id === this.settings.forward_DC_ID) 
+            //         if ((msg.channel.type === ChannelType.DM || msg.channel.type === ChannelType.GuildText) && msg.author?.id === settings.forward_DC_ID) 
             //         {
             //             logger.d("messageCreate:第四種情況");
             //             if (this.messageRegex.test(msg.content)) 
             //             {
-            //                 this.command = msg.content.replace(this.settings.discord_cmd_prefix,"").split(" ")[0];
+            //                 this.command = msg.content.replace(settings.discord_cmd_prefix,"").split(" ")[0];
             //                 this._setMap();
             //                 switch (this.command) {
             //                     case "cmd":
@@ -216,7 +232,7 @@ export class DiscordManager
             // }
         });
 
-        client.login(this.settings.bot_token).catch((e: Error) => {
+        client.login(settings.bot_token).catch((e: Error) => {
             this.error = e.toString();
             this._setMap();
             logger.l(`${localizer.format("DC_BANNER",this.map)}`);
@@ -254,7 +270,7 @@ export class DiscordManager
         for (const folder of commandFolders) 
         {
             const commandsPath = path.join(foldersPath, folder);
-            const commandFiles = fs.readdirSync(commandsPath).filter((file: string) => file.endsWith('.js')); //因執行階段為js故修改為.js 開發階段就改回.ts
+            const commandFiles = fs.readdirSync(commandsPath).filter((file: string) => file.endsWith(process.env.DEVELOP! == "true" ? '.ts' : '.js')); //因執行階段為js故修改為.js 開發階段就改回.ts
             for (const file of commandFiles) 
             {
                 const filePath = path.join(commandsPath, file);
@@ -274,7 +290,7 @@ export class DiscordManager
         }
 
         // 建構及準備一個REST實例
-        const rest = new REST().setToken(this.settings.bot_token);
+        const rest = new REST().setToken(settings.bot_token);
 
         // 建立slash commamd
         try 
@@ -282,9 +298,9 @@ export class DiscordManager
             logger.d(`開始更新 ${commands.length} 個應用程式(/)指令`);
 
             // 將會覆蓋bot所有的指令(目前是全域指令) 
-            // 單一伺服器指令 Routes.applicationGuildCommands(this.settings.bot_application_ID,"guild_id"),
+            // 單一伺服器指令 Routes.applicationGuildCommands(settings.bot_application_ID,"guild_id"),
             const data = await rest.put(
-                Routes.applicationCommands(this.settings.bot_application_ID),
+                Routes.applicationCommands(settings.bot_application_ID),
                 { body: commands },
             );
             numOfCommand = (data as Array<any>).length;
@@ -298,15 +314,14 @@ export class DiscordManager
         return numOfCommand;
     }
 
-    constructor(settings:Setting)
+    constructor()
     {
         logger.i("建立DiscordManager物件")
-        this.settings = settings;
     }
 }
 
-export default function setDiscordManager(settings:Setting)
+export default function setDiscordManager()
 {
     logger.i("進入setDiscord，建立一個新的DiscordManager物件")
-    discordManager = new DiscordManager(settings);
+    discordManager = new DiscordManager();
 }

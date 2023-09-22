@@ -2,6 +2,7 @@
 import {Config,Language} from '../models/files';
 import { LocalizerInterface } from '../models/modules';
 import { logger } from './logger';
+import { config } from './util';
 
 class LocalizationException extends Error {
   constructor(message: string) {
@@ -12,7 +13,6 @@ class LocalizationException extends Error {
 export let localizer:Localization;
 export class Localization implements LocalizerInterface 
 {
-  config: Config;
   language:Language;
 
   /**
@@ -64,9 +64,10 @@ export class Localization implements LocalizerInterface
   _getLanguage(path: string): Language 
   {
     try {
+      delete require.cache[require.resolve(path)];
       const language:Language = require(path)
       if (language === undefined) {
-        throw new LocalizationException(`no such path:${path} in ${this.config.language}.json`);
+        throw new LocalizationException(`no such path:${path} in ${config.language}.json`);
       } else {
         return language;
       }
@@ -75,16 +76,15 @@ export class Localization implements LocalizerInterface
     }
   }
 
-  constructor(config : Config)
+  constructor()
   {
     logger.i("建立Localization物件")
-    this.config = config;
     this.language = this._getLanguage(`${process.cwd()}/language/${config.language}.json`);
   }
 }
 
-export default function setLocalization (config : Config)
+export default function setLocalization()
 {
   logger.i("進入setLocalization，建立一個新的Localization物件")
-  localizer = new Localization(config)
+  localizer = new Localization()
 }

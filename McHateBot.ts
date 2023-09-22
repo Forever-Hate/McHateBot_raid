@@ -1,4 +1,3 @@
-import { Config,Setting } from "./models/files";
 import * as dotenv from 'dotenv';
 import setLocalization, { localizer } from "./utils/localization";
 import setLogger,{ logger } from "./utils/logger";
@@ -11,26 +10,26 @@ import setReplyManager, { replyManager } from "./commands/main/reply";
 import setDiscordManager, { discordManager } from "./commands/communicate/dc";
 import setTracker, { tracker } from "./commands/main/tracker";
 import login,{ bot } from "./commands/main/bot";
-import setItemVersion from "./utils/util";
+import setItemVersion, { config, getConfig, getSettings, settings } from "./utils/util";
 import setFinancer, { financer } from "./commands/main/finance";
 
 try{
     //載入環境變數
     dotenv.config()
-    const config:Config = require(`${process.cwd()}/config.json`)  //讀取config檔案
-    const settings:Setting = require(`${process.cwd()}/settings.json`) //讀取設定檔案
     const sd = require('silly-datetime');//讀取silly-datetime模塊
-    setLogger(settings);
-    setLocalization(config);
-    setDiscordManager(settings);
-    setDiscardItemer(settings);
-    setRaid(settings);
-    setAnnouncer(settings);
+    getConfig();
+    getSettings();
+    setLogger();
+    setLocalization();
+    setDiscordManager();
+    setDiscardItemer();
+    setRaid();
+    setAnnouncer();
     setInformer();
-    setExchangeManager(settings);
-    setReplyManager(settings)
-    setTracker(settings);
-    setFinancer(settings);
+    setExchangeManager();
+    setReplyManager()
+    setTracker();
+    setFinancer();
     const readline = require('readline');
     const rl = readline.createInterface({
         input: process.stdin,
@@ -43,7 +42,7 @@ try{
      */
     function showWelcomeBanner()
     {
-        (localizer.format("WELCOME_BANNER") as string[]).forEach((value,index)=>{
+        (localizer.format("WELCOME_BANNER",new Map().set("version",process.env.VERSION!)) as string[]).forEach((value,index)=>{
             logger.l(value);
         })
     }
@@ -51,7 +50,7 @@ try{
     function connect(isReconnect = false) 
     {
         logger.i("進入connect，開機")
-        const whitelist = (config.whitelist);
+        const whitelist:string[] = config.whitelist;
         const broadcast_regex = new RegExp(/\<(.*?) 的領地告示牌廣播\> (.*)/)
         const messge_regex = new RegExp(/\[(.*?) -> 您\] (.*)/)
         login(); //登入
@@ -263,6 +262,29 @@ try{
                         case "cancelpay": //取消轉帳
                         {
                             financer.cancelPay(playerId);
+                            break;
+                        }
+                        case "reload":
+                        {
+                            getConfig()
+                            getSettings()
+                            setLocalization()
+                            if (settings.enable_trade_announcement) 
+                            {
+                                announcer.reloadAnnounce();
+                            }
+                            if (settings.enable_discard) 
+                            {
+                                discardItemer.reloadDiscardItem();
+                            }
+                            if (settings.enable_detect_interrupt) 
+                            {
+                                raid.reloadRaid()
+                            }
+                            if (settings.enable_track)
+                            {
+                                tracker.reloadTrack()
+                            }
                             break;
                         }
                         case "exit": //關閉bot

@@ -1,7 +1,7 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js';
 import { logger } from '../../../../utils/logger';
 import { TrackLog, tracker } from '../../../main/tracker';
-import { getDiscordTrackLogEmbedField } from '../../../../utils/util';
+import { getDiscordTrackLogEmbedField, settings } from '../../../../utils/util';
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -11,12 +11,12 @@ module.exports = {
 	{
 		logger.i("執行fulllog指令");
 		await interaction.deferReply({ ephemeral: true });
-		const track:TrackLog = tracker.getTrackLog(false)
+		const track:TrackLog = tracker.getTrackLog(false) as TrackLog
 		const embed = {
 			color: 1752220,
 			title: '所有拾取紀錄一覽',
 			thumbnail: {
-				url: 'https://static.wikia.nocookie.net/minecraft_gamepedia/images/a/a9/Emerald_Ore_JE4_BE3.png',
+				url: settings.embed_thumbnail_url,
 			},
 			fields: getDiscordTrackLogEmbedField(track),
 			timestamp: new Date().toISOString(),

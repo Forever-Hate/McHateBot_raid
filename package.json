@@ -1,6 +1,6 @@
 {
   "name": "mchatebot_raid",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "author": "I-love-minecraft#2437",
   "main": "McHateBot.ts",
   "scripts": {
@@ -12,9 +12,10 @@
     "minecraft-data": "^3.44.0",
     "mineflayer": "^4.14.0",
     "mineflayer-web-inventory": "^1.8.4",
-    "package.json": "^2.0.1",
-    "prismarine-tokens-fixed": "^1.1.2",
     "prismarine-windows": "^2.8.0",
+    "prismarine-block":"^1.17.1",
+    "prismarine-entity": "^2.3.1",
+    "prismarine-item": "^1.14.0",
     "silly-datetime": "^0.1.2"
   },
   "bin": "index.js",
@@ -33,6 +34,7 @@
     "outputPath": "./exe"
   },
   "devDependencies": {
+    "@types/node": "^20.6.3",
     "cpy-cli": "^5.0.0",
     "ts-node": "^10.9.1",
     "typescript": "^5.2.2"

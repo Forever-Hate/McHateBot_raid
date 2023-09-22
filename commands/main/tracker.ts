@@ -1,10 +1,7 @@
-import { Bot } from "mineflayer";
 import { Entity } from "prismarine-entity";
-
-import { Setting } from "../../models/files";
 import { localizer } from "../../utils/localization";
 import { logger } from "../../utils/logger";
-import { Item, formatThousandths, formatTime } from "../../utils/util";
+import { Item, formatThousandths, formatTime, settings } from "../../utils/util";
 import { bot } from "./bot";
 const sd = require('silly-datetime'); //讀取silly-datetime模塊
 
@@ -24,7 +21,6 @@ interface ITrackLog{
     startTime?:Date | undefined;
     endTime?:Date | undefined;
     isPartTime?: boolean | undefined;
-    settings:Setting;
 }
 
 /**
@@ -48,7 +44,6 @@ export class TrackLog implements ITrackLog{
     items : Map<string,number>;
     isPartTime: boolean;
     average : Map<string,string>;
-    settings: Setting;
 
     map:Map<string,string> = new Map<string,string>();
 
@@ -121,13 +116,13 @@ export class TrackLog implements ITrackLog{
         if (this.isPartTime)
         {
             logger.d("為部分時間")
-            s = `${formatThousandths(itemCount)}個/${formatTime(this.settings.track_record)}`
+            s = `${formatThousandths(itemCount)}個/${formatTime(settings.track_record)}`
         }
         else
         {
             logger.d("不為部分時間")
-            const time:number = Number((this.totalTime / this.settings.track_record).toFixed(1)) < 1 ? 1 : Number((this.totalTime / this.settings.track_record).toFixed(1))
-            s = `${formatThousandths(Number((itemCount / time).toFixed(1)))}個/${formatTime(this.settings.track_record)}`
+            const time:number = Number((this.totalTime / settings.track_record).toFixed(1)) < 1 ? 1 : Number((this.totalTime / settings.track_record).toFixed(1))
+            s = `${formatThousandths(Number((itemCount / time).toFixed(1)))}個/${formatTime(settings.track_record)}`
         }
         logger.d(`回傳計算平均結果: ${s}`)
         return s 
@@ -141,7 +136,6 @@ export class TrackLog implements ITrackLog{
         this.totalTime = Math.floor((this.endTime!.getTime() - this.startTime!.getTime()) / 1000);
         this.isPartTime = obj.isPartTime ?? true;
         this.items = obj.items;
-        this.settings = obj.settings;
         this.average = this._setAverage();
     }
     
@@ -150,12 +144,11 @@ export class TrackLog implements ITrackLog{
 }
 export class Tracker 
 {
-    settings:Setting;
     totalCollection:Map<string,number> = new Map<string,number>;
     partTimeCollection:Map<string,number> = new Map<string,number>;
-    startTime:Date | null = null;
+    startTime:Date | null = new Date(); //程式一開始就記錄時間(這樣就不會因為斷線而修改開始時間)
     partStartTime:Date | null = null;
-    trackPartTimeInterval:NodeJS.Timer | null = null;
+    trackPartTimeInterval:NodeJS.Timeout | null;
     logList:TrackLog[] = [];
 
     //Summoned to wait by CONSOLE
@@ -167,10 +160,9 @@ export class Tracker
     track()
     {
         logger.i("進入track，開始追蹤紀錄，並註冊playerCollect")
-        this.startTime = new Date()
-        // 一開始的時間是一樣的
-        this.partStartTime = this.startTime
-        logger.i(`現在時間: ${sd.format(this.startTime, 'YYYY/MM/DD HH:mm:ss')}，開始記錄`)
+        // 重新取得時間(可能剛開機時會有1-2秒的誤差)
+        this.partStartTime = new Date();
+        logger.i(`現在時間: ${sd.format(this.partStartTime, 'YYYY/MM/DD HH:mm:ss')}，開始記錄`)
         bot.on("playerCollect",(collector:Entity,collected:Entity)=>{
             if ((collector.username ? collector.username : "") === bot.username)
             {
@@ -185,7 +177,7 @@ export class Tracker
                     logger.d(`拾取的物品: ${item.name}`);
                     logger.d(`拾取的數量: ${item.count}`);
                     
-                    if (this.settings.track_list.includes(item.name))
+                    if (settings.track_list.includes(item.name))
                     {
                         logger.d(`存在於追蹤物品清單中`);
                         //總表
@@ -219,39 +211,6 @@ export class Tracker
                 }
             }
         })
-        this.trackPartTimeInterval = setInterval(()=>{
-            const endTime = new Date() //取得當前時間做為結束時間
-            const log = new TrackLog({
-                items:this.partTimeCollection,
-                settings:this.settings,
-                startTime:this.partStartTime as Date,
-                endTime:endTime
-            })
-            if(this.logList.length === 10)
-            {
-                logger.d(`已達指定暫存上限，清除暫存`);
-                //是否要寫入log檔
-                    //寫入log
-                this.logList = [];
-            }
-            else
-            {
-                logger.d(`將log添加進暫存內`);
-                this.logList.push(log);
-                if(this.settings.enable_track_log)
-                {
-                    logger.d(`有開啟拾取紀錄log，記錄至檔案`);
-                    logger.writeTrackLog(log);
-                }
-            }
-
-            // 一個的結束就是另一個的開始
-            this.partStartTime = endTime;
-            //清空map暫存
-            this.partTimeCollection.clear();
-
-
-        },this.settings.track_record * 1000);
     }
     
     /**
@@ -259,60 +218,75 @@ export class Tracker
      */
     trackDown()
     {
-        logger.i("進入trackDown，取消監聽 playerCollect 與關閉Interval")
+        logger.i("進入trackDown，取消監聽 playerCollect")
         bot.removeAllListeners('playerCollect')
-        clearInterval(this.trackPartTimeInterval as NodeJS.Timer)
-        if(this.settings.enable_track_log)
-        {
-            logger.d("有開啟紀錄，儲存當前拾取紀錄log")
-            logger.writeTrackLog(new TrackLog({
-                items:this.partTimeCollection,
-                settings:this.settings,
-                startTime:this.partStartTime as Date,
-                endTime:new Date()
-            }))
-        }
     }
+    
+    /**
+     * 重新更新trackInterval
+     */
+    reloadTrack()
+    {
+        logger.i("進入reloadTrack，重新更新trackInterval")
+        if(this.trackPartTimeInterval)
+        {
+            clearInterval(this.trackPartTimeInterval);
+        }
+        this.trackPartTimeInterval = setInterval(()=>{
+            const endTime = new Date() //取得當前時間做為結束時間
+            const log = new TrackLog({
+                items:new Map(this.partTimeCollection), //建立一個新的Map參考
+                startTime:this.partStartTime as Date,
+                endTime:endTime
+            })
+            logger.d(`將log添加進暫存內`);
+            this.logList.push(log);
+            if(settings.enable_track_log)
+            {
+                logger.d(`有開啟拾取紀錄log，記錄至檔案`);
+                logger.writeTrackLog(log);
+            }
 
+            //檢查是否大於25個元素
+            if (this.logList.length > 25) 
+            {
+                this.logList.shift(); //移除第一個元素
+            }
+
+            // 一個的結束就是另一個的開始
+            this.partStartTime = endTime;
+            //清空map暫存
+            this.partTimeCollection.clear();
+
+        },settings.track_record * 1000);
+    }
     /**
      * 取得當前紀錄
      * @param { string } playerId - 發送指令的玩家ID
+     * @param { string[] } args - 指令參數
      */
     getCurrentTrackLog(playerId:string,args:string[])
     {
         logger.i("進入getCurrentTrackLog，取得當前拾取紀錄")
-        let track:TrackLog = this.getTrackLog(true);
+        let track:TrackLog | undefined;
         if(args.length === 2)
         {
-            logger.d("參數數量為2")
-            try
+            const result:TrackLog | string = this.getTrackLog(true,args[1]);
+            if(result instanceof TrackLog)
             {
-                logger.d(args[1])
-                logger.d(this.logList.length)
-                const index = parseInt(args[1], 10); // 嘗試將 args[1] 解析為數字
-                if (isNaN(index)) 
-                {
-                    throw new Error(`參數輸入錯誤，輸入的參數為: ${args[1]}`);
-                }
-                if(index > this.logList.length)
-                {
-                    track = this.logList[this.logList.length-1]
-                }
-                else if(index <= 0)
-                {
-                    throw new Error(`參數輸入錯誤，輸入的參數為: ${args[1]}`);
-                }
-                else
-                {
-                    track = this.logList[index - 1] 
-                }      
+                track =  result;
             }
-            catch(e:any)
+            else
             {
                 logger.e(`參數輸入錯誤，輸入的參數為: ${args[1]}`)
-                bot.chat(`/m ${playerId} ${localizer.format("TRACK_ERROR")}`);
+                bot.chat(`/m ${playerId} ${result}`);
                 return;
             }
+            
+        }
+        else
+        {
+            track = this.getTrackLog(true) as TrackLog;
         }
 
         track.toString().forEach((str, index) => {
@@ -323,7 +297,7 @@ export class Tracker
 
         track.toString().forEach((str, index) => {
             logger.l(str);
-        })
+        }) 
     }
 
     /**
@@ -333,7 +307,7 @@ export class Tracker
     getFullTrackLog(playerId:string)
     {
         logger.i("進入getFullTrackLog，取得所有拾取紀錄")
-        const track = this.getTrackLog(false);
+        const track:TrackLog = this.getTrackLog(false) as TrackLog;
         track.toString().forEach((str, index) => {
             setTimeout(()=>{
              bot.chat(`/m ${playerId} ${str}`);
@@ -346,27 +320,73 @@ export class Tracker
     /**
      * 取得紀錄
      * @param { boolean } isCurrent - 是否為當前紀錄
-     * @returns { TrackLog } 紀錄
+     * @param { number | undefined } indexString - 指定的index(僅限isCurrent = true才可定義)
+     * @returns { TrackLog|string } 紀錄/錯誤訊息
      */
-    getTrackLog(isCurrent:boolean):TrackLog
+    getTrackLog(isCurrent:boolean,indexString:string | undefined = undefined):TrackLog | string
     {
         logger.i("進入getTrackLog，取得拾取紀錄")
         if(isCurrent)
         {
             logger.d("為當前紀錄")
-            return new TrackLog({
-                items:this.partTimeCollection,
-                settings:this.settings,
-                startTime:this.partStartTime as Date,
-                endTime:new Date()
-            });
+            try
+            {
+                logger.d(`index: ${indexString}`)
+                logger.d(`logLength: ${this.logList.length}`)
+                if(indexString)
+                {
+                    logger.d("有填寫index，回傳歷史log")
+                    const index = parseInt(indexString, 10); // 嘗試將 indexString 解析為數字
+                    if (isNaN(index)) 
+                    {
+                        logger.d("無法解析成數字")
+                        throw new Error(`參數輸入錯誤，輸入的參數為: ${indexString}`);
+                    }
+                    if(index <= 0) //index 定義範圍應為1~25
+                    {
+                        throw new Error(`參數輸入錯誤，輸入的參數為: ${indexString}`);
+                    }
+                    else if(this.logList.length == 0)
+                    {
+                        logger.d("未有任意一個歷史log，回傳當前log")
+                        return new TrackLog({
+                            items:this.partTimeCollection,
+                            startTime:this.partStartTime as Date,
+                            endTime:new Date()
+                        });
+                    }
+                    else if(index > this.logList.length)
+                    {
+                        logger.d("超過歷史log長度，回傳最後一個歷史log")
+                        return this.logList[this.logList.length-1]
+                    }
+                    else
+                    {
+                        logger.d("回傳指定查詢的歷史log")
+                        return this.logList[index - 1] 
+                    }      
+                }
+                else
+                {
+                    logger.d("未填寫index，回傳當前log")
+                    return new TrackLog({
+                        items:this.partTimeCollection,
+                        startTime:this.partStartTime as Date,
+                        endTime:new Date()
+                    });
+                }
+            }
+            catch(e:any)
+            {
+                logger.e(e.toString())
+                return localizer.format("TRACK_ERROR") as string
+            }
         }
         else
         {
-            logger.d("不為當前紀錄")
+            logger.d("為所有紀錄")
             return new TrackLog({
                 items:this.totalCollection,
-                settings:this.settings,
                 startTime:this.startTime as Date,
                 endTime:new Date(),
                 isPartTime:false,
@@ -374,14 +394,41 @@ export class Tracker
         }
     }
 
-    constructor(settings:Setting)
+    constructor()
     {
         logger.i("建立Tracker物件")
-        this.settings = settings;
+
+        this.trackPartTimeInterval = setInterval(()=>{
+            const endTime = new Date() //取得當前時間做為結束時間
+            const log = new TrackLog({
+                items:new Map(this.partTimeCollection), //建立一個新的Map參考
+                startTime:this.partStartTime as Date,
+                endTime:endTime
+            })
+            logger.d(`將log添加進暫存內`);
+            this.logList.push(log);
+            if(settings.enable_track_log)
+            {
+                logger.d(`有開啟拾取紀錄log，記錄至檔案`);
+                logger.writeTrackLog(log);
+            }
+
+            //檢查是否大於25個元素
+            if (this.logList.length > 25) 
+            {
+                this.logList.shift(); //移除第一個元素
+            }
+
+            // 一個的結束就是另一個的開始
+            this.partStartTime = endTime;
+            //清空map暫存
+            this.partTimeCollection.clear();
+
+        },settings.track_record * 1000);
     }
 }
-export default function setTracker(settings:Setting)
+export default function setTracker()
 {
     logger.i("進入setTracker，建立一個新的Tracker物件")
-    tracker = new Tracker(settings);
+    tracker = new Tracker();
 }

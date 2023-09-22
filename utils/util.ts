@@ -6,8 +6,9 @@ import ItemVersions from 'prismarine-item';
 
 import { logger } from "./logger"
 import { TrackLog } from "../commands/main/tracker";
+import { Config, Setting } from "../models/files";
 
-export let Item:any;
+export let config:Config,Item:any,settings:Setting;
 
 /**
  * 取得輸入指令後彈出的視窗實例
@@ -24,19 +25,19 @@ export function get_window(bot:Bot, category:string):Promise<Window>
             clearInterval(timeout)
             resolve(window);
         })
-        const timeout:NodeJS.Timer = setInterval(()=>{
+        const timeout:NodeJS.Timeout = setInterval(()=>{
             reject();
         },5000)
     }))
 }
 
 /**
-   * 初始化函數，建立minecraft物件類型
-   * 
-   * 因需要bot物件依賴，故無法在初始化時宣告
-   * 
-   * @param { Bot } bot - bot實例
-  */
+ * 初始化函數，建立minecraft物件類型
+ * 
+ * 因需要bot物件依賴，故無法在初始化時宣告
+ * 
+ * @param { Bot } bot - bot實例
+ */
 export default function setItemVersion(bot:Bot)
 {
     logger.i(`進入setItemVersion，取得minecraft Item類型`)
@@ -211,3 +212,20 @@ export function getDiscordTrackLogEmbedField(track:TrackLog):APIEmbedField[]
     
     return fields;
 }
+/**
+ * 取得settings
+ */
+export function getSettings()
+{
+    delete require.cache[require.resolve(`${process.cwd()}/settings.json`)]; //清除暫存
+    settings = require(`${process.cwd()}/settings.json`) //讀取設定檔案
+}
+/**
+ * 取得config
+ */
+export function getConfig()
+{
+    delete require.cache[require.resolve(`${process.cwd()}/config.json`)]; //清除暫存
+    config = require(`${process.cwd()}/config.json`)  //讀取config檔案
+}
+

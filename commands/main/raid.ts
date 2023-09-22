@@ -1,15 +1,14 @@
-import { Setting } from "../../models/files";
 import { RaidInterface } from "../../models/modules";
 import { localizer } from "../../utils/localization";
 import { logger } from "../../utils/logger";
 import { bot } from "./bot";
 import { discordManager } from "../communicate/dc";
+import { settings } from "../../utils/util";
 
 export let raid:RaidController;
 
 export class RaidController implements RaidInterface
 {
-    settings: Setting;
     mob_list: string[];
     isNoMob: boolean = true;
     enableRaid: boolean = true;
@@ -41,12 +40,12 @@ export class RaidController implements RaidInterface
                 }
                 count++;
                 //超過指定的ticks數才會開始打怪
-                if (count === self.settings.Interval_ticks) 
+                if (count === settings.Interval_ticks) 
                 {
                     self.isNoMob = true;
                     for (const mobentity in bot.entities) 
                     {
-                        if (bot.entity.position.distanceTo(bot.entities[mobentity].position) <= self.settings.attack_radius) //攻擊距離最大 = 6
+                        if (bot.entity.position.distanceTo(bot.entities[mobentity].position) <= settings.attack_radius) //攻擊距離最大 = 6
                         {
                             if (bot.entities[mobentity].name ?? undefined) //確認是否為空值
                             {
@@ -79,19 +78,19 @@ export class RaidController implements RaidInterface
             if (this.isNoMob && exp === bot.experience.points) 
             {
                 logger.d("沒有怪且無獲得經驗")
-                if (this.settings.enable_discord_bot) 
+                if (settings.enable_discord_bot) 
                 {
                     logger.d("有開啟discord bot")
                     discordManager.send("", `${localizer.format("DETECT_INTERRUPT_MSG_DC_PREFIX", this.map)}: ${localizer.format("DETECT_INTERRUPT_MSG_DC_STEM", this.map)}`);
                 }
-                if(this.settings.enable_reply_msg)
+                if(settings.enable_reply_msg)
                 {
                     logger.d("有開啟回覆訊息")
-                    bot.chat(`/m ${this.settings.forward_ID} ${localizer.format("DETECT_INTERRUPT_MSG_GAME_STEM", this.map)}`);
+                    bot.chat(`/m ${settings.forward_ID} ${localizer.format("DETECT_INTERRUPT_MSG_GAME_STEM", this.map)}`);
                 }
             }
             exp = bot.experience.points;
-        }, this.settings.check_raid_cycleTime * 1000);
+        }, settings.check_raid_cycleTime * 1000);
     };
 
     /**
@@ -101,7 +100,7 @@ export class RaidController implements RaidInterface
     {
         logger.i(`進入raidDown，關閉打怪`)
         this.enableRaid = false;
-        if (this.settings.enable_detect_interrupt) 
+        if (settings.enable_detect_interrupt) 
         {
             if(this.noRaidInterval)
             {
@@ -109,6 +108,19 @@ export class RaidController implements RaidInterface
             }
         }
     };
+
+    /**
+     * 重新更新noRaidInterval
+    */
+    reloadRaid()
+    {
+        logger.i("進入reloadRaid，重新更新noRaidInterval")
+        if(this.noRaidInterval)
+        {
+            clearInterval(this.noRaidInterval); 
+        }
+        this.detectInterruption()
+    }
 
     /**
      * 穿上裝備(包含手上物品、頭、胸、腿、靴)
@@ -214,17 +226,16 @@ export class RaidController implements RaidInterface
         this.map.set("username", this.username);
     }
 
-    constructor(settings: Setting)
+    constructor()
     {
         logger.i("建立RaidController物件")
-        this.settings = settings;
         this.mob_list = settings.mob_list
     }
     
 }
 
-export default function setRaid(settings: Setting)
+export default function setRaid()
 {
     logger.i("進入setRaid，建立一個新的RaidController物件")
-    raid = new RaidController(settings);
+    raid = new RaidController();
 }
