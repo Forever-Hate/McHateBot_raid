@@ -3,6 +3,7 @@ import { localizer } from "../../utils/localization";
 import { logger } from "../../utils/logger";
 import { Item, formatThousandths, formatTime, settings } from "../../utils/util";
 import { bot } from "./bot";
+import { Route, websocketClient } from "../websocket/websocket";
 const sd = require('silly-datetime'); //讀取silly-datetime模塊
 
 export let tracker:Tracker;
@@ -148,11 +149,8 @@ export class Tracker
     partTimeCollection:Map<string,number> = new Map<string,number>;
     startTime:Date | null = new Date(); //程式一開始就記錄時間(這樣就不會因為斷線而修改開始時間)
     partStartTime:Date | null = null;
-    trackPartTimeInterval:NodeJS.Timeout | null;
+    trackPartTimeInterval:NodeJS.Timeout | null = null;
     logList:TrackLog[] = [];
-
-    //Summoned to wait by CONSOLE
-    //Summoned to server41 by CONSOLE
 
     /**
      * 開始追蹤
@@ -216,11 +214,11 @@ export class Tracker
     /**
      * 取消追蹤
      */
-    trackDown()
-    {
-        logger.i("進入trackDown，取消監聽 playerCollect")
-        bot.removeAllListeners('playerCollect')
-    }
+    // trackDown()
+    // {
+    //     logger.i("進入trackDown，取消監聽 playerCollect")
+    //     bot.removeAllListeners('playerCollect')
+    // }
     
     /**
      * 重新更新trackInterval
@@ -397,34 +395,46 @@ export class Tracker
     constructor()
     {
         logger.i("建立Tracker物件")
+        if (settings.enable_track)
+        {
+            this.trackPartTimeInterval = setInterval(()=>{
+                const endTime = new Date() //取得當前時間做為結束時間
+                const log = new TrackLog({
+                    items:new Map(this.partTimeCollection), //建立一個新的Map參考
+                    startTime:this.partStartTime as Date,
+                    endTime:endTime
+                })
+                logger.d(`將log添加進暫存內`);
+                this.logList.push(log);
+                if(settings.enable_track_log)
+                {
+                    logger.d(`有開啟拾取紀錄log，記錄至檔案`);
+                    logger.writeTrackLog(log);
+                }
+    
+                //檢查是否大於25個元素
+                if (this.logList.length > 25) 
+                {
+                    this.logList.shift(); //移除第一個元素
+                }
+                
+                //發送websocket
+                websocketClient!.send(Route.trackLogs,JSON.stringify(this.logList.map((log)=>log.toJson())))
 
-        this.trackPartTimeInterval = setInterval(()=>{
-            const endTime = new Date() //取得當前時間做為結束時間
-            const log = new TrackLog({
-                items:new Map(this.partTimeCollection), //建立一個新的Map參考
-                startTime:this.partStartTime as Date,
-                endTime:endTime
-            })
-            logger.d(`將log添加進暫存內`);
-            this.logList.push(log);
-            if(settings.enable_track_log)
-            {
-                logger.d(`有開啟拾取紀錄log，記錄至檔案`);
-                logger.writeTrackLog(log);
-            }
+                // 一個的結束就是另一個的開始
+                this.partStartTime = endTime;
+                //清空map暫存
+                this.partTimeCollection.clear();
+    
+            },settings.track_record * 1000);
+        }
+        else
+        {
+            setInterval(()=>{
+                websocketClient!.send(Route.trackLogs,JSON.stringify({"error":"track is disabled"}));
+            },settings.track_record * 1000);
+        }
 
-            //檢查是否大於25個元素
-            if (this.logList.length > 25) 
-            {
-                this.logList.shift(); //移除第一個元素
-            }
-
-            // 一個的結束就是另一個的開始
-            this.partStartTime = endTime;
-            //清空map暫存
-            this.partTimeCollection.clear();
-
-        },settings.track_record * 1000);
     }
 }
 export default function setTracker()

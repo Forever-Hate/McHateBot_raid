@@ -9,9 +9,11 @@ import setExchangeManager, { exchangeManager } from "./commands/main/Exchange";
 import setReplyManager, { replyManager } from "./commands/main/reply";
 import setDiscordManager, { discordManager } from "./commands/communicate/dc";
 import setTracker, { tracker } from "./commands/main/tracker";
-import login,{ bot } from "./commands/main/bot";
+import login,{ bot,setIsOnline} from "./commands/main/bot";
 import setItemVersion, { config, getConfig, getSettings, settings } from "./utils/util";
 import setFinancer, { financer } from "./commands/main/finance";
+import { Route, WebSocketClient , websocketClient } from "./commands/websocket/websocket"
+import { ChatMessage } from 'prismarine-chat';
 
 try{
     //載入環境變數
@@ -36,7 +38,9 @@ try{
         output: process.stdout,
         terminal: false
     });
-    const inventoryViewer = require('mineflayer-web-inventory')
+    
+    WebSocketClient.init();
+    websocketClient!.refreshData()
     /**
      * 顯示歡迎旗幟在console
      */
@@ -47,7 +51,7 @@ try{
         })
     }
 
-    function connect(isReconnect = false) 
+    function connect() 
     {
         logger.i("進入connect，開機")
         const whitelist:string[] = config.whitelist;
@@ -58,12 +62,8 @@ try{
         bot.once('spawn', async () => {   //bot啟動時
             logger.i(`${localizer.format("LOADING_DONE")}`);
             showWelcomeBanner();
+            setIsOnline(true);
             setItemVersion(bot);
-            if(settings.enable_inventory_viewer)
-            {
-                logger.d("有開啟inventoryViewer")
-                inventoryViewer(bot)
-            }
             //從小黑窗中發送訊息
             rl.on('line', async function (line:any) 
             {
@@ -96,23 +96,25 @@ try{
                 }
                 raid.raid()
             }
-            if (settings.enable_trade_announcement) 
+            if (settings.enable_trade_announce) 
             {
                 logger.d("有開啟宣傳")
                 announcer.startAnnounce()
             }
         });
 
-        bot.on("message", async function (jsonMsg:any) {
+        bot.on("message", async (jsonMsg:ChatMessage) => {
             const health = new RegExp(/目標生命 \: ❤❤❤❤❤❤❤❤❤❤ \/ ([\S]+)/g); //清除目標生命
-            if (!settings.health) {
+            if (!settings.enable_display_health) {
                 if (health.test(jsonMsg.toString())) {
                     return;
                 } else {
                     console.log(`${jsonMsg.toAnsi()}`);
+                    websocketClient!.send(Route.message,jsonMsg.toHTML())
                 }
             } else {
                 console.log(`${jsonMsg.toAnsi()}`);
+                websocketClient!.send(Route.message,jsonMsg.toHTML())
             }
 
             if (jsonMsg.toString().startsWith(`[系統] `)) {
@@ -269,7 +271,7 @@ try{
                             getConfig()
                             getSettings()
                             setLocalization()
-                            if (settings.enable_trade_announcement) 
+                            if (settings.enable_trade_announce) 
                             {
                                 announcer.reloadAnnounce();
                             }
@@ -337,30 +339,22 @@ try{
         bot.once('end', () => {
             let time1 = sd.format(new Date(), 'YYYY-MM-DD HH-mm-ss'); //獲得系統時間
             logger.l(`[資訊] 客戶端與伺服器斷線 ，10秒後將會自動重新連線...\n@${time1}`)
-            if (settings.enable_trade_announcement) 
-            {
-                announcer.stopAnnounceInterval();
-            }
             if (settings.enable_discard) 
             {
                 discardItemer.stopDiscardItemInterval();
             }
-            if (settings.enable_attack) 
+            if(settings.enable_trade_announce)
+            {
+                announcer.stopAnnounceInterval();
+            }
+            if (settings.enable_detect_interrupt) 
             {
                 raid.raidDown()
             }
-            if (readline) 
-            {
-                logger.i("取消監聽console line 事件")
-                rl.removeAllListeners('line');
-            }
-            if (settings.enable_track)
-            {
-                tracker.trackDown()
-            }
             exchangeManager.errorStop()
+            setIsOnline(false);
             setTimeout(function () {
-                connect(true);
+                connect();
             }, 10000)
         });
 
@@ -371,14 +365,14 @@ try{
     }
 
     connect();
-} catch (err:any) {
+} 
+catch (err:any) {
     console.error(err)
     console.log('process exit in 10 sec...')
     new Promise(resolve => setTimeout(async () => {
         logger.writeErrorLog(err)
         process.exit()
     }, 10000))
-
 }
 
 

@@ -4,19 +4,22 @@
   "author": "I-love-minecraft#2437",
   "main": "McHateBot.ts",
   "scripts": {
-    "build": "tsc && cpy .env out && cpy ./language out && cpy config-orginal.json out && cpy settings-orginal.json out && rename out\\config-orginal.json config.json && rename out\\settings-orginal.json settings.json && pkg ./out/McHateBot.js -t node18-win-x64 -c package.json && cpy config-orginal.json exe && cpy settings-orginal.json exe && cpy ./language exe && cpy .env exe && rename exe\\config-orginal.json config.json && rename exe\\settings-orginal.json settings.json"
+    "build": "cmd /C scripts\\build.bat",
+    "swagger": "node ./swagger.js"
   },
   "dependencies": {
     "discord.js": "^14.13.0",
     "dotenv": "^16.3.1",
+    "express": "^4.18.2",
     "minecraft-data": "^3.44.0",
     "mineflayer": "^4.14.0",
-    "mineflayer-web-inventory": "^1.8.4",
-    "prismarine-windows": "^2.8.0",
-    "prismarine-block":"^1.17.1",
+    "prismarine-block": "^1.17.1",
+    "prismarine-chat": "^1.9.1",
     "prismarine-entity": "^2.3.1",
     "prismarine-item": "^1.14.0",
-    "silly-datetime": "^0.1.2"
+    "prismarine-windows": "^2.8.0",
+    "silly-datetime": "^0.1.2",
+    "ws": "^8.14.2"
   },
   "bin": "index.js",
   "engines": {
@@ -24,8 +27,7 @@
   },
   "pkg": {
     "assets": [
-      "/node_modules/mineflayer",
-      "/node_modules/discord.js",
+      "./out/dist",
       "./out/commands/communicate/commands/**/*.js",
       "./utils",
       "./models",
@@ -34,8 +36,14 @@
     "outputPath": "./exe"
   },
   "devDependencies": {
+    "@types/express": "^4.17.18",
     "@types/node": "^20.6.3",
+    "@types/swagger-ui-dist": "^3.30.3",
+    "@types/swagger-ui-express": "^4.1.4",
+    "@types/ws": "^8.5.6",
     "cpy-cli": "^5.0.0",
+    "swagger-autogen": "^2.23.6",
+    "swagger-ui-express": "^5.0.0",
     "ts-node": "^10.9.1",
     "typescript": "^5.2.2"
   }

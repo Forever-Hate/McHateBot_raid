@@ -1,10 +1,9 @@
 {
-  "enable_inventory_viewer":false,
   "enable_detect_broadcast": false,
 
   "enable_attack": true,
-  "health": false,
-  "Interval_ticks": 10,
+  "enable_display_health": false,
+  "interval_ticks": 10,
   "attack_radius": 6,
   "mob_list": [
     "witch",
@@ -15,7 +14,7 @@
   ],
 
   "enable_detect_interrupt": true,
-  "check_raid_cycleTime": 60,
+  "check_raid_interval": 60,
 
   "enable_track":false,
   "enable_track_log":false,
@@ -29,7 +28,7 @@
   "enable_stay_totem":false,
   "enable_auto_stack_totem":false,
   "enable_totem_notifier":false,
-  "discarditem_cycleTime": 10,
+  "discard_interval": 10,
   "stayItem_list": [
     "emerald",
     "netherite_sword",
@@ -40,8 +39,8 @@
   "no_item_exchange_interval": 0.5,
   "item_exchange_interval": 0.8,
 
-  "enable_trade_announcement": false,
-  "trade_announce_cycleTime": 605,
+  "enable_trade_announce": false,
+  "trade_announce_interval": 605,
   "enable_trade_content_cycle": true,
   "content_skip_count": 1,
   "trade_content": [
@@ -56,7 +55,7 @@
 
   "enable_reply_msg": false,
   "forward_ID": "請填入要接收轉發訊息的minecraft玩家ID(enable_reply_msg:true 就需要填寫)",
-  "clear_reply_id_delay_time": 600,
+  "clear_reply_id_interval": 600,
   "enable_auto_reply": false,
   "auto_reply_week": "1-7",
   "auto_reply_time": "00:00-08:00",

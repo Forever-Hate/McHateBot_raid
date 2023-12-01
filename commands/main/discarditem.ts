@@ -93,7 +93,7 @@ export class DiscardItemer implements DiscardItemInterface
         logger.d(`已獲得指定數量的綠寶石，數量為: ${numOfEmerald}個，存入銀行`)
         await this._saveEmerald();
       }
-    }, settings.discarditem_cycleTime * 1000);
+    }, settings.discard_interval * 1000);
   }
   /**
    * 重新更新discardItemInterval

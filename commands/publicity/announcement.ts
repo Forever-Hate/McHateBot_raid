@@ -79,7 +79,7 @@ export class Announcer implements AnnounceInterface
                 }
             }
         }
-        }, settings.trade_announce_cycleTime * 1000);
+        }, settings.trade_announce_interval * 1000);
     }
     
     /**
