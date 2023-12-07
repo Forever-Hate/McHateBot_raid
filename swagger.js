@@ -40,6 +40,11 @@ const doc = {
             description: "玩家uuid",
             nullable: false,
           },
+          tps: {
+            type: "integer",
+            description: "當前TPS",
+            nullable: false,
+          },
           money: {
             type: "string",
             description: "玩家持有綠寶石",

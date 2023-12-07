@@ -14,6 +14,8 @@ import setItemVersion, { config, getConfig, getSettings, settings } from "./util
 import setFinancer, { financer } from "./commands/main/finance";
 import { Route, WebSocketClient , websocketClient } from "./commands/websocket/websocket"
 import { ChatMessage } from 'prismarine-chat';
+import * as mineflayer from 'mineflayer';
+var tpsPlugin = require('mineflayer-tps')(mineflayer);
 
 try{
     //載入環境變數
@@ -58,7 +60,7 @@ try{
         const broadcast_regex = new RegExp(/\<(.*?) 的領地告示牌廣播\> (.*)/)
         const messge_regex = new RegExp(/\[(.*?) -> 您\] (.*)/)
         login(); //登入
-
+        bot.loadPlugin(tpsPlugin); //載入tps插件
         bot.once('spawn', async () => {   //bot啟動時
             logger.i(`${localizer.format("LOADING_DONE")}`);
             showWelcomeBanner();
@@ -289,6 +291,11 @@ try{
                             }
                             break;
                         }
+                        case "tps":
+                        {
+                            bot.chat(`/m ${playerId} ${bot.getTps()}`)
+                            break;
+                        }
                         case "exit": //關閉bot
                         {
                             bot.chat(`/m ${playerId} ${localizer.format("SHUTDOWN")}`)
@@ -353,6 +360,7 @@ try{
             }
             exchangeManager.errorStop()
             setIsOnline(false);
+            rl.removeListener('line', rl.listeners('line')[0]); //移除監聽(此事件不會自動移除)
             setTimeout(function () {
                 connect();
             }, 10000)

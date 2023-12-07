@@ -210,6 +210,23 @@
                   }
                 }
               },
+              "tps": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "integer"
+                  },
+                  "description": {
+                    "type": "string",
+                    "example": "當前TPS"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": false
+                  }
+                }
+              },
               "money": {
                 "type": "object",
                 "properties": {
