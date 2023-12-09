@@ -360,7 +360,10 @@ try{
             }
             exchangeManager.errorStop()
             setIsOnline(false);
-            rl.removeListener('line', rl.listeners('line')[0]); //移除監聽(此事件不會自動移除)
+            if(rl.listeners('line').length > 0)
+            {
+                rl.removeListener('line', rl.listeners('line')[0]); //移除監聽(此事件不會自動移除)
+            }
             setTimeout(function () {
                 connect();
             }, 10000)
