@@ -131,25 +131,25 @@ export class WebSocketClient
           const CurrentPlayers = new RegExp(`線上人數 : ([\\s\\S]+) \\/ ([\\s\\S]+)`).exec(split.toString().trim())
 
           let BotStates = {
-            Money: 0,
-            VCoin:0,
-            CurrenServer:0,
-            CurrentPlayers:0
+            Money:"",
+            VCoin:"",
+            CurrenServer:"",
+            CurrentPlayers:"",
           }
 
           if (MoneyRegex){
             let Money =  parseInt(MoneyRegex[1].replaceAll(",",""))
             financer.balance = Money
-            BotStates.Money = Money
-            BotStates.VCoin = parseInt(MoneyRegex[2])
+            BotStates.Money = MoneyRegex[1]
+            BotStates.VCoin = MoneyRegex[2]
           }
 
           if (CurrenServer){
-            BotStates.CurrenServer = parseInt(CurrenServer[1])
+            BotStates.CurrenServer = CurrenServer[1]
           }
 
           if (CurrentPlayers){
-            BotStates.CurrentPlayers = parseInt(CurrentPlayers[1])
+            BotStates.CurrentPlayers = CurrentPlayers[1]
           }
 
           const block = bot.blockAtCursor()
@@ -322,26 +322,27 @@ export class WebSocketClient
         const MoneyRegex = new RegExp("綠寶石餘額 : ([\\s\\S]+) \\/ 村民錠餘額 : ([\\s\\S]+) \\/ 村民錠價格 : 每個約 ([\\s\\S]+) 綠").exec(split.toString().trim())
         const CurrenServer = new RegExp(`所處位置 : 分流([\\s\\S]+)-([\\s\\S]+) -([\\s\\S]+) -座標 : ([\\s\\S]+)`).exec(split.toString().trim())
         const CurrentPlayers = new RegExp(`線上人數 : ([\\s\\S]+) \\/ ([\\s\\S]+)`).exec(split.toString().trim())
+
         let BotStates = {
-          Money: 0,
-          VCoin:0,
-          CurrenServer:0,
-          CurrentPlayers:0
+          Money:"",
+          VCoin:"",
+          CurrenServer:"",
+          CurrentPlayers:"",
         }
 
         if (MoneyRegex){
           let Money =  parseInt(MoneyRegex[1].replaceAll(",",""))
           financer.balance = Money
-          BotStates.Money = Money
-          BotStates.VCoin = parseInt(MoneyRegex[2])
+          BotStates.Money = MoneyRegex[1]
+          BotStates.VCoin = MoneyRegex[2]
         }
 
         if (CurrenServer){
-          BotStates.CurrenServer = parseInt(CurrenServer[1])
+          BotStates.CurrenServer = CurrenServer[1]
         }
 
         if (CurrentPlayers){
-          BotStates.CurrentPlayers = parseInt(CurrentPlayers[1])
+          BotStates.CurrentPlayers = CurrentPlayers[1]
         }
 
         const block = bot.blockAtCursor()
@@ -354,7 +355,7 @@ export class WebSocketClient
           "money":BotStates.Money,
           "coin":BotStates.VCoin,
           "server":BotStates.CurrenServer,
-          "currentPlayers":bot.tablist.header.extra && bot.tablist.header.extra[65] ? parseInt(bot.tablist.header.extra[65].json['text']) : null,
+          "currentPlayers":BotStates.CurrentPlayers,
           "targetedBlock":block ? {
             "type":block.type,
             "name":block.name,
