@@ -22,7 +22,7 @@ export class Financer implements FinanceInterface
     /**
      * 轉出指定金額給指定玩家
      * @param { string } playerId - 下指令的玩家ID
-     * @param { string[] } args - 指令參數
+     * @param { string[] } args - 指令參數 
      * @param { boolean } isfromdiscord - 是否從discord發送指令
      * @returns { Promise<string> } 錯誤/成功訊息
      */
@@ -30,7 +30,7 @@ export class Financer implements FinanceInterface
     {
         logger.i("進入pay，進行轉帳")
         const decimalPatternRegex = new RegExp(/^[+-]?\d+(\.\d+)?$/);
-        if (args.length === 3 || args.length === 4)
+        if (args.length === 3 || args.length === 4) 
         {
             logger.i(`參數數量為3或4，參數數量為:${args.length}`)
             await this._getBalance();
@@ -46,7 +46,7 @@ export class Financer implements FinanceInterface
                 {
                     bot.chat(`/m ${playerId} ${localizer.format("FINANCE_PAY_FORMAT_ERROR",this.map)}`);
                 }
-                return localizer.format("FINANCE_PAY_FORMAT_ERROR",this.map) as string
+                return localizer.format("FINANCE_PAY_FORMAT_ERROR",this.map) as string 
             }
             else if(this.expence <= 0 || !decimalPatternRegex.test(args[2].toString())) //判斷輸入的是不是 <= 0 或者是小數 
             {
@@ -55,7 +55,7 @@ export class Financer implements FinanceInterface
                 {
                     bot.chat(`/m ${playerId} ${localizer.format("FINANCE_ZERO_OR_NEGATIVE_EXPENCE_ERROR",this.map)}`);
                 }
-                return localizer.format("FINANCE_ZERO_OR_NEGATIVE_EXPENCE_ERROR",this.map) as string
+                return localizer.format("FINANCE_ZERO_OR_NEGATIVE_EXPENCE_ERROR",this.map) as string 
             }
             //判斷有沒有添加轉帳理由
             if(args.length === 4)
@@ -67,7 +67,7 @@ export class Financer implements FinanceInterface
             {
                 logger.d(`參數不為4，未填入轉帳理由，修改為預設值:"無"`)
                 this.reason = "無"
-
+                
             }
             this._setMap();
             //判斷是不是有足夠的錢轉帳
@@ -83,8 +83,8 @@ export class Financer implements FinanceInterface
                 }
                 return localizer.format("FINANCE_PAY_BALANCE_NOT_ENOUGH_ERROR",this.map) as string;
             }
-        }
-        else
+        } 
+        else 
         {
             if(!isfromdiscord)
             {
@@ -97,7 +97,7 @@ export class Financer implements FinanceInterface
     /**
      * 轉出所有的餘額
      * @param { string } playerId - 下指令的玩家ID
-     * @param { string[] } args - 指令參數
+     * @param { string[] } args - 指令參數 
      * @param { boolean } isfromdiscord - 是否從discord發送指令
      * @returns { Promise<string> } 錯誤/成功訊息
      */
@@ -124,11 +124,11 @@ export class Financer implements FinanceInterface
         }
         else
         {
-            if(!isfromdiscord)
-            {
+           if(!isfromdiscord)
+           {
                 bot.chat(`/m ${playerId} ${localizer.format("FINANCE_PAY_BALANCE_NOT_ENOUGH_ERROR",this.map)}`);
-            }
-            return localizer.format("FINANCE_PAY_BALANCE_NOT_ENOUGH_ERROR",this.map) as string;
+           }
+           return localizer.format("FINANCE_PAY_BALANCE_NOT_ENOUGH_ERROR",this.map) as string;
         }
     }
 
@@ -156,7 +156,7 @@ export class Financer implements FinanceInterface
      * @param isfromdiscord - 是否從discord發送指令
      * @returns { Promise<string> } 錯誤/成功訊息
      */
-    async cancelPay(playerId:string | undefined,isfromdiscord:boolean = false):Promise<string>
+    async cancelPay(playerId:string | undefined,isfromdiscord:boolean = false):Promise<string> 
     {
         if(this.transferTimeout)
         {
@@ -187,14 +187,12 @@ export class Financer implements FinanceInterface
      */
     async _getBalance():Promise<number>
     {
-
-        // logger.i("進入_getBalance，取得金錢餘額")
-        // bot.chat("/money");
-        // let moneyString:string = await bot.awaitMessage(/^金錢：/)
-        // moneyString = moneyString.replaceAll(",","");
-        // this.balance = parseInt(moneyString.slice(4, moneyString.length));
-        //this.balance = financer.balance
-        return financer.balance;
+        logger.i("進入_getBalance，取得金錢餘額")
+        bot.chat("/money");
+        let moneyString:string = await bot.awaitMessage(/^金錢：/)
+        moneyString = moneyString.replaceAll(",","");
+        this.balance = parseInt(moneyString.slice(4, moneyString.length));
+        return this.balance;
     }
     /**
      * 內部函數，轉帳
@@ -211,7 +209,7 @@ export class Financer implements FinanceInterface
         }
         bot.chat(`/pay ${this.recipientId} ${this.expence}`); //轉帳指令
         const msg:string = await bot.awaitMessage(transferErrorRegex,transferSuccessRegex) //透過awaitMessage取得訊息
-        if (transferErrorRegex.test(msg))
+        if (transferErrorRegex.test(msg)) 
         {
             return await this._transferError(isfromdiscord)
         }
@@ -237,7 +235,7 @@ export class Financer implements FinanceInterface
             this.reason = "無";
             this.balance = 0;
             this.expence = 0;
-            this.playerId = "";
+            this.playerId = ""; 
             this.recipientId = "";
             return localizer.format("FINANCE_PAY_COMPLETE",this.map) as string;
         }
@@ -289,7 +287,7 @@ export class Financer implements FinanceInterface
             this.reason = "無";
             this.balance = 0;
             this.expence = 0;
-            this.playerId = "";
+            this.playerId = ""; 
             this.recipientId = "";
             return localizer.format("FINANCE_PAY_FAIL_TO_OWNER",this.map) as string;
         }
@@ -312,7 +310,7 @@ export class Financer implements FinanceInterface
     {
         logger.i("建立Financer物件");
     }
-
+    
 }
 
 export default function setFinancer()
