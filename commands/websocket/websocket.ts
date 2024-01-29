@@ -4,7 +4,7 @@ import express from 'express';
 import swaggerUi from 'swagger-ui-express';
 import { logger } from '../../utils/logger';
 import { bot, isOnline } from '../main/bot';
-import path from 'path';
+import path, { parse } from 'path';
 import { TrackLog, tracker } from '../main/tracker';
 import { config, getAvailablePort, settings } from '../../utils/util';
 import {financer} from "../main/finance";
@@ -125,16 +125,16 @@ export class WebSocketClient
         (req, res) => {
 
           const split =  bot.tablist.header.toString().split("\n")
-         // console.log(split)
+          //console.log(split)
           const MoneyRegex = new RegExp("綠寶石餘額 : ([\\s\\S]+) \\/ 村民錠餘額 : ([\\s\\S]+) \\/ 村民錠價格 : 每個約 ([\\s\\S]+) 綠").exec(split.toString().trim())
           const CurrenServer = new RegExp(`所處位置 : 分流([\\s\\S]+)-([\\s\\S]+) -([\\s\\S]+) -座標 : ([\\s\\S]+)`).exec(split.toString().trim())
-          const CurrentPlayers = new RegExp(`線上人數 : ([\\s\\S]+) \\/ ([\\s\\S]+)`).exec(split.toString().trim())
+          const CurrentPlayers = new RegExp(`當前分流人數 : (\\S+)`).exec(split.toString().trim())
 
           let BotStates = {
             Money:"",
             VCoin:"",
-            CurrenServer:"",
-            CurrentPlayers:"",
+            CurrenServer:0,
+            CurrentPlayers:0,
           }
 
           if (MoneyRegex){
@@ -145,11 +145,11 @@ export class WebSocketClient
           }
 
           if (CurrenServer){
-            BotStates.CurrenServer = CurrenServer[1]
+            BotStates.CurrenServer = parseInt(CurrenServer[1])
           }
 
           if (CurrentPlayers){
-            BotStates.CurrentPlayers = CurrentPlayers[1]
+            BotStates.CurrentPlayers = parseInt(CurrentPlayers[1])
           }
 
           const block = bot.blockAtCursor()
@@ -321,13 +321,13 @@ export class WebSocketClient
         const split =  bot.tablist.header.toString().split("\n")
         const MoneyRegex = new RegExp("綠寶石餘額 : ([\\s\\S]+) \\/ 村民錠餘額 : ([\\s\\S]+) \\/ 村民錠價格 : 每個約 ([\\s\\S]+) 綠").exec(split.toString().trim())
         const CurrenServer = new RegExp(`所處位置 : 分流([\\s\\S]+)-([\\s\\S]+) -([\\s\\S]+) -座標 : ([\\s\\S]+)`).exec(split.toString().trim())
-        const CurrentPlayers = new RegExp(`線上人數 : ([\\s\\S]+) \\/ ([\\s\\S]+)`).exec(split.toString().trim())
+        const CurrentPlayers = new RegExp(`當前分流人數 : (\\S+)`).exec(split.toString().trim())
 
         let BotStates = {
           Money:"",
           VCoin:"",
-          CurrenServer:"",
-          CurrentPlayers:"",
+          CurrenServer:0,
+          CurrentPlayers:0,
         }
 
         if (MoneyRegex){
@@ -338,11 +338,11 @@ export class WebSocketClient
         }
 
         if (CurrenServer){
-          BotStates.CurrenServer = CurrenServer[1]
+          BotStates.CurrenServer = parseInt(CurrenServer[1])
         }
 
         if (CurrentPlayers){
-          BotStates.CurrentPlayers = CurrentPlayers[1]
+          BotStates.CurrentPlayers = parseInt(CurrentPlayers[1])
         }
 
         const block = bot.blockAtCursor()
