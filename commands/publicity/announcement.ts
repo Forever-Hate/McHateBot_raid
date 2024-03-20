@@ -1,7 +1,11 @@
 import { AnnounceInterface } from "../../models/modules";
 import { localizer } from "../../utils/localization";
 import { logger } from "../../utils/logger";
+<<<<<<< HEAD
 import { replaceNewlines, settings } from "../../utils/util";
+=======
+import { removeCarriageReturns, settings } from "../../utils/util";
+>>>>>>> 53a425fc59ef35ff0f3661be3f717ecac344d18c
 import { bot } from "../main/bot";
 
 export let announcer:Announcer;
@@ -25,7 +29,11 @@ export class Announcer implements AnnounceInterface
         //將每一句間隔0.5秒發送出去
         this.trade_content.forEach((c, index) => {
             setTimeout(()=>{
+<<<<<<< HEAD
                 bot.chat(replaceNewlines(`${c}`));
+=======
+                bot.chat(removeCarriageReturns(`${c}`));
+>>>>>>> 53a425fc59ef35ff0f3661be3f717ecac344d18c
             }, 500 * (index + 1));
         });
 
