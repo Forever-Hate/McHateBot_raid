@@ -255,7 +255,6 @@ export function getAvailablePort(startPort: number): Promise<number> {
 }
 
 /**
-<<<<<<< HEAD
  * 替換所有換行符號 (U+000A, U+000D) 為空格
  * @param { string } text 原始字串
  * @returns { string } 處理過的字串
