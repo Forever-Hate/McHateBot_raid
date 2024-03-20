@@ -260,5 +260,5 @@ export function getAvailablePort(startPort: number): Promise<number> {
  * @returns { string } 處理過的字串
  */
 export function removeCarriageReturns(text: string): string {
-    return text.replace(/\r/g, '\n');
+    return text.replace(/\r/g, '');
 }
