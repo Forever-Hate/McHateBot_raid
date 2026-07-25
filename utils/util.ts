@@ -1,13 +1,17 @@
-const sd = require('silly-datetime'); //讀取silly-datetime模塊
-import { APIEmbedField } from "discord.js";
-import { Bot } from "mineflayer"
+import { DateTime } from 'luxon';
+import fs from 'node:fs';
+import { createRequire } from 'node:module';
+import type { APIEmbedField } from "discord.js";
+import type { Bot } from "mineflayer"
 import net from 'net';
-import { Window } from 'prismarine-windows';
-import ItemVersions from 'prismarine-item';
+import type { Window } from 'prismarine-windows';
 
-import { logger } from "./logger"
-import { TrackLog } from "../commands/main/tracker";
-import { Config, Setting } from "../models/files";
+const require = createRequire(import.meta.url);
+const ItemVersions = require('prismarine-item') as (mcVersion: string | object) => typeof import('prismarine-item').Item;
+
+import { logger } from "./logger.ts"
+import { TrackLog } from "../commands/main/tracker.ts";
+import type { Config, Setting } from "../models/files.ts";
 
 export let config:Config,Item:any,settings:Setting;
 
@@ -107,12 +111,12 @@ export function getDiscordTrackLogEmbedField(track:TrackLog):APIEmbedField[]
         },
         {
             name:"開始時間:",
-            value:sd.format(track.startTime, 'YYYY/MM/DD HH:mm:ss'),
+            value: track.startTime ? DateTime.fromJSDate(track.startTime).toFormat('yyyy/MM/dd HH:mm:ss') : "",
             inline:false
         },
         {
             name:"結束時間:",
-            value:sd.format(track.endTime, 'YYYY/MM/DD HH:mm:ss'),
+            value: track.endTime ? DateTime.fromJSDate(track.endTime).toFormat('yyyy/MM/dd HH:mm:ss') : "",
             inline:false
         },
         {
@@ -218,16 +222,14 @@ export function getDiscordTrackLogEmbedField(track:TrackLog):APIEmbedField[]
  */
 export function getSettings()
 {
-    delete require.cache[require.resolve(`${process.cwd()}/settings.json`)]; //清除暫存
-    settings = require(`${process.cwd()}/settings.json`) //讀取設定檔案
+    settings = JSON.parse(fs.readFileSync(`${process.cwd()}/settings.json`, 'utf8')) as Setting;
 }
 /**
  * 取得config
  */
 export function getConfig()
 {
-    delete require.cache[require.resolve(`${process.cwd()}/config.json`)]; //清除暫存
-    config = require(`${process.cwd()}/config.json`)  //讀取config檔案
+    config = JSON.parse(fs.readFileSync(`${process.cwd()}/config.json`, 'utf8')) as Config;
 }
 
 /**

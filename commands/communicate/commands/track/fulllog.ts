@@ -1,7 +1,7 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js';
-import { logger } from '../../../../utils/logger';
-import { TrackLog, tracker } from '../../../main/tracker';
-import { getDiscordTrackLogEmbedField, settings } from '../../../../utils/util';
+import { logger } from '../../../../utils/logger.ts';
+import { TrackLog, tracker } from '../../../main/tracker.ts';
+import { getDiscordTrackLogEmbedField, settings } from '../../../../utils/util.ts';
 
 module.exports = {
 	data: new SlashCommandBuilder()

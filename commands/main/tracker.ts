@@ -1,10 +1,10 @@
-import { Entity } from "prismarine-entity";
-import { localizer } from "../../utils/localization";
-import { logger } from "../../utils/logger";
-import { Item, formatThousandths, formatTime, settings } from "../../utils/util";
-import { bot } from "./bot";
-import { Route, websocketClient } from "../websocket/websocket";
-const sd = require('silly-datetime'); //讀取silly-datetime模塊
+import type { Entity } from "prismarine-entity";
+import { DateTime } from 'luxon';
+import { localizer } from "../../utils/localization.ts";
+import { logger } from "../../utils/logger.ts";
+import { Item, formatThousandths, formatTime, settings } from "../../utils/util.ts";
+import { bot } from "./bot.ts";
+import { Route, websocketClient } from "../websocket/websocket.ts";
 
 export let tracker:Tracker;
 /**
@@ -82,8 +82,8 @@ export class TrackLog implements ITrackLog{
     toJson():{}
     {
         return {
-            startTime: sd.format(this.startTime, 'YYYY/MM/DD HH:mm:ss'),
-            endTime: sd.format(this.endTime, 'YYYY/MM/DD HH:mm:ss'),
+            startTime: this.startTime ? DateTime.fromJSDate(this.startTime).toFormat('yyyy/MM/dd HH:mm:ss') : '',
+            endTime: this.endTime ? DateTime.fromJSDate(this.endTime).toFormat('yyyy/MM/dd HH:mm:ss') : '',
             totalTime: formatTime(this.totalTime),
             isPartTime: this.isPartTime,
             items: Object.fromEntries(this.items),
@@ -160,7 +160,7 @@ export class Tracker
         logger.i("進入track，開始追蹤紀錄，並註冊playerCollect")
         // 重新取得時間(可能剛開機時會有1-2秒的誤差)
         this.partStartTime = new Date();
-        logger.i(`現在時間: ${sd.format(this.partStartTime, 'YYYY/MM/DD HH:mm:ss')}，開始記錄`)
+        logger.i(`現在時間: ${DateTime.fromJSDate(this.partStartTime).toFormat('yyyy/MM/dd HH:mm:ss')}，開始記錄`)
         bot.on("playerCollect",(collector:Entity,collected:Entity)=>{
             if ((collector.username ? collector.username : "") === bot.username)
             {

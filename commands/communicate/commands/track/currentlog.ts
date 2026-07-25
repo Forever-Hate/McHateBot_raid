@@ -1,8 +1,8 @@
 import { AutocompleteInteraction, ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js';
-import { logger } from '../../../../utils/logger';
-import { TrackLog, tracker } from '../../../main/tracker';
-import { formatTime, getDiscordTrackLogEmbedField, settings } from '../../../../utils/util';
-const sd = require('silly-datetime')
+import { DateTime } from 'luxon';
+import { logger } from '../../../../utils/logger.ts';
+import { TrackLog, tracker } from '../../../main/tracker.ts';
+import { formatTime, getDiscordTrackLogEmbedField, settings } from '../../../../utils/util.ts';
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -48,7 +48,11 @@ module.exports = {
 		logger.i("執行currentlog autocomplete");
 		const logList = tracker.logList;
 		//const focusedValue = interaction.options.getFocused();
-		const choices = logList.map((log,index) => `${index+1}. ${sd.format(log.startTime, 'YYYY/MM/DD HH:mm:ss')} ~ ${sd.format(log.endTime, 'YYYY/MM/DD HH:mm:ss')} (共${formatTime(log.totalTime)})`)
+		const choices = logList.map((log,index) => {
+			const start = log.startTime ? DateTime.fromJSDate(log.startTime).toFormat('yyyy/MM/dd HH:mm:ss') : '';
+			const end = log.endTime ? DateTime.fromJSDate(log.endTime).toFormat('yyyy/MM/dd HH:mm:ss') : '';
+			return `${index+1}. ${start} ~ ${end} (共${formatTime(log.totalTime)})`;
+		})
 		//const filtered = choices.filter(choice => choice.startsWith(focusedValue));
 		await interaction.respond(
 			choices.map((choice,index) => ({ name: choice, value: (index+1).toString()})),

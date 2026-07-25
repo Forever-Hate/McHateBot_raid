@@ -1,13 +1,16 @@
-import { Window } from 'prismarine-windows';
-import { Entity } from 'prismarine-entity';
-import ItemVersions,{ Item } from 'prismarine-item';
+import type { Window } from 'prismarine-windows';
+import type { Entity } from 'prismarine-entity';
+import type { Item } from 'prismarine-item';
+import { createRequire } from 'node:module';
+import type { ExchangeInterface } from '../../models/modules.ts';
+import { localizer } from '../../utils/localization.ts';
+import { logger } from '../../utils/logger.ts';
+import { discardItemer } from './discarditem.ts';
+import { get_window,formatThousandths, settings } from '../../utils/util.ts';
+import { bot } from './bot.ts';
 
-import { ExchangeInterface } from '../../models/modules';
-import { localizer } from '../../utils/localization';
-import { logger } from '../../utils/logger';
-import { discardItemer } from './discarditem';
-import { get_window,formatThousandths, settings } from '../../utils/util';
-import { bot } from './bot';
+const require = createRequire(import.meta.url);
+const ItemVersions = require('prismarine-item') as (mcVersion: string | object) => typeof import('prismarine-item').Item;
 
 /**
  * 所選要交換的物品class

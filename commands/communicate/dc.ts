@@ -1,10 +1,11 @@
 import { Client, Partials,IntentsBitField, TextChannel, User, Collection, Events, REST, Routes } from 'discord.js';
-import { localizer } from '../../utils/localization';
-import { logger } from '../../utils/logger';
+import { localizer } from '../../utils/localization.ts';
+import { logger } from '../../utils/logger.ts';
 import fs from 'fs';
 import path from 'path';
-import { bot } from '../main/bot';
-import { settings } from '../../utils/util';
+import { pathToFileURL } from 'node:url';
+import { bot } from '../main/bot.ts';
+import { settings } from '../../utils/util.ts';
 
 const intents = new IntentsBitField(['Guilds', 'GuildMessages', 'DirectMessages']);
 const client = new Client({ intents: intents, partials: [Partials.Channel] });
@@ -144,7 +145,9 @@ export class DiscordManager
                         }
                 
                         try {
-                            await command.autocomplete(interaction);
+                            if (typeof command.autocomplete === "function") {
+                                await command.autocomplete(interaction);
+                            }
                         } catch (error) {
                             logger.e(error);
                         }
@@ -274,7 +277,7 @@ export class DiscordManager
             for (const file of commandFiles) 
             {
                 const filePath = path.join(commandsPath, file);
-                const command = require(filePath);
+                const command = await import(pathToFileURL(filePath).href);
                 if ('data' in command && 'execute' in command) 
                 {
                     //將指令存在一個暫存

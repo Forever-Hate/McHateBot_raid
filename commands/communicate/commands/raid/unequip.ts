@@ -1,7 +1,7 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js';
-import { logger } from '../../../../utils/logger';
-import { localizer } from '../../../../utils/localization';
-import { raid } from '../../../main/raid';
+import { logger } from '../../../../utils/logger.ts';
+import { localizer } from '../../../../utils/localization.ts';
+import { raid } from '../../../main/raid.ts';
 
 module.exports = {
 	data: new SlashCommandBuilder()

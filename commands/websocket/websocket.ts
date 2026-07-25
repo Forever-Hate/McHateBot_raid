@@ -1,25 +1,26 @@
-import * as WebSocket from 'ws';
+import { WebSocket, WebSocketServer } from 'ws';
 import * as http from 'http';
 import express from 'express';
 import swaggerUi from 'swagger-ui-express';
-import { logger } from '../../utils/logger';
-import { bot, isOnline } from '../main/bot';
-import path, { parse } from 'path';
-import { TrackLog, tracker } from '../main/tracker';
-import { config, getAvailablePort, settings } from '../../utils/util';
-import {financer} from "../main/finance";
+import { logger } from '../../utils/logger.ts';
+import { bot, isOnline } from '../main/bot.ts';
+import path from 'path';
+import { TrackLog, tracker } from '../main/tracker.ts';
+import { config, getAvailablePort, settings } from '../../utils/util.ts';
+import { financer } from "../main/finance.ts";
+import fs from 'node:fs';
 
 export let websocketClient:WebSocketClient | null = null
 
-export const enum Route
-{
-  message = "/message",
-  player = "/player",
-  currentTrack = "/currentTrack",
-  fullTrack = "/fullTrack",
-  trackLogs = "/trackLogs",
+export const Route = {
+  message: "/message",
+  player: "/player",
+  currentTrack: "/currentTrack",
+  fullTrack: "/fullTrack",
+  trackLogs: "/trackLogs",
+} as const;
 
-}
+export type Route = typeof Route[keyof typeof Route];
 
 export class WebSocketClient
 {
@@ -29,7 +30,7 @@ export class WebSocketClient
     res.writeHead(200, { 'Content-Type': 'text/plain' });
     res.end('WebSocket Server');
   });
-  wss = new WebSocket.Server({ noServer:true });
+  wss = new WebSocketServer({ noServer:true });
 
   playerInterval:NodeJS.Timeout | null = null
 
@@ -124,31 +125,41 @@ export class WebSocketClient
             description: "玩家資料" } */
         (req, res) => {
 
-          const split =  bot.tablist.header.toString().split("\n")
-          //console.log(split)
-          const MoneyRegex = new RegExp("綠寶石餘額 : ([\\s\\S]+) \\/ 村民錠餘額 : ([\\s\\S]+) \\/ 村民錠價格 : 每個約 ([\\s\\S]+) 綠").exec(split.toString().trim())
+          let BotStates = {
+            Money: 0,
+            VCoin: 0,
+            CurrenServer: 0,
+            CurrentPlayers: 0,
+          }
+
+          // 從 scoreboard 讀取資料
+          const map = (bot.scoreboards as any)?.["TAB-Scoreboard"]?.itemsMap;
+          
+          if (map) {
+            // 讀取綠寶石餘額
+            let emerald = map?.["§2§r"]?.displayName?.text?.match(/＄.*?([\d,]+)元/)?.[1] || "0";
+            BotStates.Money = parseInt(emerald.replace(/,/g, "")) || 0;
+            financer.balance = BotStates.Money;
+
+            // 讀取村民錠
+            let villager = map?.["§3§r"]?.displayName?.text?.match(/§f([\d,]+)個/)?.[1] || "0";
+            BotStates.VCoin = parseInt(villager.replace(/,/g, "")) || 0;
+            
+            console.log('Emerald:', BotStates.Money, 'Villager Coin:', BotStates.VCoin);
+          } else {
+            console.log('TAB-Scoreboard not found in bot.scoreboards');
+          }
+          
+          // 從 tablist header 讀取其他資料（如果需要）
+          const split = bot.tablist.header.toString().split("\n")
           const CurrenServer = new RegExp(`所處位置 : 分流([\\s\\S]+)-([\\s\\S]+) -([\\s\\S]+) -座標 : ([\\s\\S]+)`).exec(split.toString().trim())
           const CurrentPlayers = new RegExp(`當前分流人數 : (\\S+)`).exec(split.toString().trim())
 
-          let BotStates = {
-            Money:"",
-            VCoin:"",
-            CurrenServer:0,
-            CurrentPlayers:0,
-          }
-
-          if (MoneyRegex){
-            let Money =  parseInt(MoneyRegex[1].replaceAll(",",""))
-            financer.balance = Money
-            BotStates.Money = MoneyRegex[1]
-            BotStates.VCoin = MoneyRegex[2]
-          }
-
-          if (CurrenServer){
+          if (CurrenServer) {
             BotStates.CurrenServer = parseInt(CurrenServer[1])
           }
 
-          if (CurrentPlayers){
+          if (CurrentPlayers) {
             BotStates.CurrentPlayers = parseInt(CurrentPlayers[1])
           }
 
@@ -158,7 +169,7 @@ export class WebSocketClient
             "version":config.version,
             "username":bot.username,
             "uuid":bot.player.uuid,
-            "tps":bot.getTps(),
+            "tps":20,
             "money":BotStates.Money,
             "coin":BotStates.VCoin,
             "server":BotStates.CurrenServer,
@@ -271,13 +282,13 @@ export class WebSocketClient
         })
 
     //swagger路由
-    router.use('/api-docs', process.env.DEVELOP == 'true' ? swaggerUi.serve :express.static(path.join(__dirname,'../../dist')));
+    router.use('/api-docs', process.env.DEVELOP == 'true' ? swaggerUi.serve :express.static(path.join(process.cwd(),'dist')));
 
     if(process.env.DEVELOP == 'true')
     {
       router.get('/api-docs',
           // #swagger.ignore = true
-          swaggerUi.setup(require(`${process.cwd()}/swagger-output.json`))
+          swaggerUi.setup(JSON.parse(fs.readFileSync(`${process.cwd()}/swagger-output.json`, 'utf8')))
       );
     }
 
@@ -318,30 +329,37 @@ export class WebSocketClient
     this.playerInterval = setInterval(()=>{
       if(isOnline)
       {
-        const split =  bot.tablist.header.toString().split("\n")
-        const MoneyRegex = new RegExp("綠寶石餘額 : ([\\s\\S]+) \\/ 村民錠餘額 : ([\\s\\S]+) \\/ 村民錠價格 : 每個約 ([\\s\\S]+) 綠").exec(split.toString().trim())
+        let BotStates = {
+          Money: 0,
+          VCoin: 0,
+          CurrenServer: 0,
+          CurrentPlayers: 0,
+        }
+
+        // 從 scoreboard 讀取資料
+        const map = (bot.scoreboards as any)?.["TAB-Scoreboard"]?.itemsMap;
+        
+        if (map) {
+          // 讀取綠寶石餘額
+          let emerald = map?.["§2§r"]?.displayName?.text?.match(/＄.*?([\d,]+)元/)?.[1] || "0";
+          BotStates.Money = parseInt(emerald.replace(/,/g, "")) || 0;
+          financer.balance = BotStates.Money;
+
+          // 讀取村民錠
+          let villager = map?.["§3§r"]?.displayName?.text?.match(/§f([\d,]+)個/)?.[1] || "0";
+          BotStates.VCoin = parseInt(villager.replace(/,/g, "")) || 0;
+        }
+        
+        // 從 tablist header 讀取其他資料
+        const split = bot.tablist.header.toString().split("\n")
         const CurrenServer = new RegExp(`所處位置 : 分流([\\s\\S]+)-([\\s\\S]+) -([\\s\\S]+) -座標 : ([\\s\\S]+)`).exec(split.toString().trim())
         const CurrentPlayers = new RegExp(`當前分流人數 : (\\S+)`).exec(split.toString().trim())
 
-        let BotStates = {
-          Money:"",
-          VCoin:"",
-          CurrenServer:0,
-          CurrentPlayers:0,
-        }
-
-        if (MoneyRegex){
-          let Money =  parseInt(MoneyRegex[1].replaceAll(",",""))
-          financer.balance = Money
-          BotStates.Money = MoneyRegex[1]
-          BotStates.VCoin = MoneyRegex[2]
-        }
-
-        if (CurrenServer){
+        if (CurrenServer) {
           BotStates.CurrenServer = parseInt(CurrenServer[1])
         }
 
-        if (CurrentPlayers){
+        if (CurrentPlayers) {
           BotStates.CurrentPlayers = parseInt(CurrentPlayers[1])
         }
 
@@ -351,7 +369,7 @@ export class WebSocketClient
           "version":config.version,
           "username":bot.username,
           "uuid":bot.player.uuid,
-          "tps":bot.getTps(),
+          "tps":20,
           "money":BotStates.Money,
           "coin":BotStates.VCoin,
           "server":BotStates.CurrenServer,

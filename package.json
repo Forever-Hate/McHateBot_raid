@@ -1,51 +1,61 @@
 {
   "name": "mchatebot_raid",
-  "version": "1.2.34",
+  "version": "2.0",
   "author": "I-love-minecraft#2437",
+  "type": "module",
   "main": "McHateBot.ts",
   "scripts": {
     "build": "cmd /C scripts\\build.bat",
+    "start": "node McHateBot.ts",
     "swagger": "node ./swagger.js"
   },
   "dependencies": {
-    "discord.js": "^14.13.0",
-    "dotenv": "^16.3.1",
-    "express": "^4.18.2",
-    "minecraft-data": "^3.44.0",
-    "mineflayer": "^4.14.0",
+    "discord.js": "^14.27.0",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "luxon": "^3.7.2",
+    "minecraft-data": "^3.111.0",
+    "mineflayer": "^4.37.1",
     "mineflayer-tps": "^1.0.1",
-    "prismarine-block": "^1.17.1",
-    "prismarine-chat": "^1.9.1",
-    "prismarine-entity": "^2.3.1",
-    "prismarine-item": "^1.14.0",
-    "prismarine-windows": "^2.8.0",
-    "silly-datetime": "^0.1.2",
-    "ws": "^8.14.2"
+    "prismarine-block": "^1.23.0",
+    "prismarine-chat": "^1.13.0",
+    "prismarine-entity": "^2.6.0",
+    "prismarine-item": "^1.18.0",
+    "prismarine-windows": "^2.10.0",
+    "ws": "^8.21.1"
   },
-  "bin": "index.js",
+  "bin": "out/McHateBot.js",
   "engines": {
-    "node": ">= 18"
+    "node": ">= 24"
   },
   "pkg": {
+    "scripts": [
+      "./out/commands/communicate/commands/**/*.js"
+    ],
     "assets": [
-      "./out/dist",
+      "./out/config.json",
+      "./out/settings.json",
+      "./out/swagger-output.json",
+      "./out/language/**/*",
+      "./out/dist/**/*",
+      "./out/models/**/*",
       "./out/commands/communicate/commands/**/*.js",
-      "./utils",
-      "./models",
       ".env"
     ],
     "outputPath": "./exe"
   },
   "devDependencies": {
-    "@types/express": "^4.17.18",
-    "@types/node": "^20.6.3",
-    "@types/swagger-ui-dist": "^3.30.3",
-    "@types/swagger-ui-express": "^4.1.4",
-    "@types/ws": "^8.5.6",
-    "cpy-cli": "^5.0.0",
-    "swagger-autogen": "^2.23.6",
-    "swagger-ui-express": "^5.0.0",
-    "ts-node": "^10.9.1",
-    "typescript": "^5.2.2"
+    "@types/express": "^5.0.6",
+    "@types/luxon": "^3.7.2",
+    "@types/node": "^26.1.1",
+    "@types/swagger-ui-dist": "^3.30.6",
+    "@types/swagger-ui-express": "^4.1.8",
+    "@types/ws": "^8.18.1",
+    "@yao-pkg/pkg": "^6.21.0",
+    "cpy-cli": "^7.0.0",
+    "swagger-autogen": "^2.23.7",
+    "swagger-ui-express": "^5.0.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^7.0.2"
   }
 }

@@ -1,9 +1,9 @@
-import { RaidInterface } from "../../models/modules";
-import { localizer } from "../../utils/localization";
-import { logger } from "../../utils/logger";
-import { bot } from "./bot";
-import { discordManager } from "../communicate/dc";
-import { settings } from "../../utils/util";
+import type { RaidInterface } from "../../models/modules.ts";
+import { localizer } from "../../utils/localization.ts";
+import { logger } from "../../utils/logger.ts";
+import { bot } from "./bot.ts";
+import { discordManager } from "../communicate/dc.ts";
+import { settings } from "../../utils/util.ts";
 
 export let raid:RaidController;
 
@@ -34,13 +34,14 @@ export class RaidController implements RaidInterface
                 this.isNoMob = true;
                 for (const mobentity in bot.entities) 
                 {
+                    logger.d(`檢查${bot.entities[mobentity].name}是否在攻擊範圍內`)
                     if (bot.entity.position.distanceTo(bot.entities[mobentity].position) <= settings.attack_radius) //攻擊距離最大 = 6
                     {
                         if (bot.entities[mobentity].name ?? undefined) //確認是否為空值
                         {
                             if (this.mob_list.includes(bot.entities[mobentity].name!)) //確認是否在目標清單內
                             {
-                                bot.attack(bot.entities[mobentity],false); //攻擊
+                                bot.attack(bot.entities[mobentity]); //攻擊
                                 //確認是否有沒有目標怪物
                                 if (this.isNoMob) 
                                 {

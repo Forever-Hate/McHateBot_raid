@@ -1,8 +1,9 @@
 
-import {Config,Language} from '../models/files';
-import { LocalizerInterface } from '../models/modules';
-import { logger } from './logger';
-import { config } from './util';
+import type { Language } from '../models/files.ts';
+import type { LocalizerInterface } from '../models/modules.ts';
+import { logger } from './logger.ts';
+import { config } from './util.ts';
+import fs from 'node:fs';
 
 class LocalizationException extends Error {
   constructor(message: string) {
@@ -64,13 +65,7 @@ export class Localization implements LocalizerInterface
   _getLanguage(path: string): Language 
   {
     try {
-      delete require.cache[require.resolve(path)];
-      const language:Language = require(path)
-      if (language === undefined) {
-        throw new LocalizationException(`no such path:${path} in ${config.language}.json`);
-      } else {
-        return language;
-      }
+      return JSON.parse(fs.readFileSync(path, "utf8")) as Language;
     } catch (e:any | unknown) {
       return e.toString();
     }

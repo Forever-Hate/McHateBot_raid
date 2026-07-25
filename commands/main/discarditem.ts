@@ -1,11 +1,11 @@
-import { Block } from "prismarine-block";
+import type { Block } from "prismarine-block";
 
-import { bot } from './bot';
-import { discordManager } from '../communicate/dc';
-import { DiscardItemInterface } from '../../models/modules';
-import { get_window, Item, settings } from '../../utils/util';
-import { logger } from '../../utils/logger';
-import { localizer } from '../../utils/localization';
+import { bot } from './bot.ts';
+import { discordManager } from '../communicate/dc.ts';
+import type { DiscardItemInterface } from '../../models/modules.ts';
+import { get_window, Item, settings } from '../../utils/util.ts';
+import { logger } from '../../utils/logger.ts';
+import { localizer } from '../../utils/localization.ts';
 
 export let discardItemer:DiscardItemer;
 

@@ -1,5 +1,5 @@
-import { Setting } from "./files";
-import { Item } from "prismarine-item";
+import type { Setting } from "./files.ts";
+import type { Item } from "prismarine-item";
 
 export interface LocalizerInterface 
 {

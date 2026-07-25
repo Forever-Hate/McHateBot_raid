@@ -1,4 +1,8 @@
 out/
 exe/
 logs/
+pay_logs/
+track_logs/
 node_modules/
+config.json
+settings.json

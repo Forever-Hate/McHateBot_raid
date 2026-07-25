@@ -1,8 +1,8 @@
-import { FinanceInterface } from "../../models/modules";
-import { logger } from "../../utils/logger";
-import { localizer } from "../../utils/localization";
-import { formatThousandths, settings } from "../../utils/util";
-import { bot } from "./bot";
+import type { FinanceInterface } from "../../models/modules.ts";
+import { logger } from "../../utils/logger.ts";
+import { localizer } from "../../utils/localization.ts";
+import { formatThousandths, settings } from "../../utils/util.ts";
+import { bot } from "./bot.ts";
 
 
 export let financer:Financer

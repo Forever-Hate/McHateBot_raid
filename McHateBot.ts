@@ -1,27 +1,25 @@
 import * as dotenv from 'dotenv';
-import setLocalization, { localizer } from "./utils/localization";
-import setLogger,{ logger } from "./utils/logger";
-import setDiscardItemer, { discardItemer } from "./commands/main/discarditem";
-import setRaid, { raid } from "./commands/main/raid";
-import setAnnouncer, { announcer } from "./commands/publicity/announcement";
-import setInformer, { informer } from "./commands/main/inform";
-import setExchangeManager, { exchangeManager } from "./commands/main/Exchange";
-import setReplyManager, { replyManager } from "./commands/main/reply";
-import setDiscordManager, { discordManager } from "./commands/communicate/dc";
-import setTracker, { tracker } from "./commands/main/tracker";
-import login,{ bot,setIsOnline} from "./commands/main/bot";
-import setItemVersion, { config, getConfig, getSettings, settings } from "./utils/util";
-import setFinancer, { financer } from "./commands/main/finance";
-import { Route, WebSocketClient , websocketClient } from "./commands/websocket/websocket"
-import { ChatMessage } from 'prismarine-chat';
-import * as mineflayer from 'mineflayer';
-import {json} from "stream/consumers";
-var tpsPlugin = require('mineflayer-tps')(mineflayer);
+import setLocalization, { localizer } from "./utils/localization.ts";
+import setLogger,{ logger } from "./utils/logger.ts";
+import setDiscardItemer, { discardItemer } from "./commands/main/discarditem.ts";
+import setRaid, { raid } from "./commands/main/raid.ts";
+import setAnnouncer, { announcer } from "./commands/publicity/announcement.ts";
+import setInformer, { informer } from "./commands/main/inform.ts";
+import setExchangeManager, { exchangeManager } from "./commands/main/Exchange.ts";
+import setReplyManager, { replyManager } from "./commands/main/reply.ts";
+import setDiscordManager, { discordManager } from "./commands/communicate/dc.ts";
+import setTracker, { tracker } from "./commands/main/tracker.ts";
+import login,{ bot,setIsOnline} from "./commands/main/bot.ts";
+import setItemVersion, { config, getConfig, getSettings, settings } from "./utils/util.ts";
+import setFinancer, { financer } from "./commands/main/finance.ts";
+import { Route, WebSocketClient , websocketClient } from "./commands/websocket/websocket.ts"
+import type { ChatMessage } from 'prismarine-chat';
+import { DateTime } from 'luxon';
+import readline from 'node:readline';
 
 try{
     //載入環境變數
     dotenv.config()
-    const sd = require('silly-datetime');//讀取silly-datetime模塊
     getConfig();
     getSettings();
     setLogger();
@@ -35,7 +33,7 @@ try{
     setReplyManager()
     setTracker();
     setFinancer();
-    const readline = require('readline');
+    
     const rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout,
@@ -54,19 +52,22 @@ try{
         })
     }
 
-    function connect()
+    async function connect()
     {
         logger.i("進入connect，開機")
         const whitelist:string[] = config.whitelist;
         const broadcast_regex = new RegExp(/\<(.*?) 的領地告示牌廣播\> (.*)/)
         const messge_regex = new RegExp(/\[(.*?) -> 您\] (.*)/)
-        login(); //登入
-        bot.loadPlugin(tpsPlugin); //載入tps插件
-        bot.once('spawn', async () => {   //bot啟動時
+
+        // 登入並等待 bot 準備就緒
+        try {
+            await login();
             logger.i(`${localizer.format("LOADING_DONE")}`);
             showWelcomeBanner();
             setIsOnline(true);
             setItemVersion(bot);
+
+            // bot 啟動後的事件監聽器
             //從小黑窗中發送訊息
             rl.on('line', async function (line:any)
             {
@@ -104,7 +105,10 @@ try{
                 logger.d("有開啟宣傳")
                 announcer.startAnnounce()
             }
-        });
+        } catch (error) {
+            logger.e(`Bot 登入失敗: ${error}`);
+            throw error;
+        }
 
         bot.on("message", async (jsonMsg:ChatMessage) => {
             const health = new RegExp(/目標生命 \: ❤❤❤❤❤❤❤❤❤❤ \/ ([\S]+)/g); //清除目標生命
@@ -286,11 +290,7 @@ try{
                                 }
                                 break;
                             }
-                            case "tps":
-                            {
-                                bot.chat(`/m ${playerId} ${bot.getTps()}`)
-                                break;
-                            }
+
                             case "exit": //關閉bot
                             {
                                 bot.chat(`/m ${playerId} ${localizer.format("SHUTDOWN")}`)
@@ -334,12 +334,12 @@ try{
             })
 
             bot.once('kicked', (reason:any) => {
-                let time1 = sd.format(new Date(), 'YYYY/MM/DD HH:mm:ss'); //獲得系統時間
+                let time1 = DateTime.now().toFormat('yyyy/MM/dd HH:mm:ss'); //獲得系統時間
                 logger.l(`[資訊] 客戶端被伺服器踢出 @${time1}   \n造成的原因:${reason}`)
             });
             //斷線自動重連
             bot.once('end', () => {
-                let time1 = sd.format(new Date(), 'YYYY-MM-DD HH-mm-ss'); //獲得系統時間
+                let time1 = DateTime.now().toFormat('yyyy-MM-dd-HH-mm-ss'); //獲得系統時間
                 logger.l(`[資訊] 客戶端與伺服器斷線 ，10秒後將會自動重新連線...\n@${time1}`)
                 if (settings.enable_discard)
                 {
@@ -359,8 +359,8 @@ try{
                 {
                     rl.removeListener('line', rl.listeners('line')[0]); //移除監聽(此事件不會自動移除)
                 }
-                setTimeout(function () {
-                    connect();
+                setTimeout(async function () {
+                    await main();
                 }, 10000)
             });
 
@@ -370,15 +370,20 @@ try{
             })
         }
 
-        connect();
+    async function main() {
+        await connect();
     }
+
+    // 啟動主函數
+    main();
+}
 catch (err:any) {
         console.error(err)
         console.log('process exit in 10 sec...')
-        new Promise(resolve => setTimeout(async () => {
+        setTimeout(async () => {
             logger.writeErrorLog(err)
             process.exit()
-        }, 10000))
+        }, 10000)
     }
 
 

@@ -1,9 +1,9 @@
 import fs from "fs"; //讀取fs模塊
+import { DateTime } from 'luxon';
 
-import { LoggerInterface } from '../models/modules';
-import { TrackLog } from "../commands/main/tracker";
-import { settings } from "./util";
-const sd = require('silly-datetime'); //讀取silly-datetime模塊
+import type { LoggerInterface } from '../models/modules.ts';
+import { TrackLog } from "../commands/main/tracker.ts";
+import { settings } from "./util.ts";
 export let logger:Log
 
 export class Log implements LoggerInterface
@@ -16,7 +16,7 @@ export class Log implements LoggerInterface
   writeErrorLog(e:any):void
   {
     this.i("進入writeErrorLog，撰寫ErrorLog");
-    const time = sd.format(new Date(), 'YYYY-MM-DD-HH-mm-ss');
+    const time = DateTime.now().toFormat('yyyy-MM-dd-HH-mm-ss');
     if (!fs.existsSync(`./logs/${time}.txt`))
     {
       fs.writeFileSync(`./logs/${time}.txt`, e.toString());
@@ -31,7 +31,7 @@ export class Log implements LoggerInterface
   writeExchangeLog(playerId: string, itemName: string, times: number):void
   {
     this.i("進入writeExchangeLog，撰寫ExchangeLog");
-    const time = sd.format(new Date(), 'YYYY/MM/DD HH:mm:ss');
+    const time = DateTime.now().toFormat('yyyy/MM/dd HH:mm:ss');
     const logMessage = `時間: [${time}], 指令執行者: [${playerId}], 交換物品: [${itemName}], 交換次數:[${times}]\r\n`;
 
     if (fs.existsSync(`./exchange_logs/logs.txt`)) 
@@ -92,7 +92,7 @@ export class Log implements LoggerInterface
   writePayLog(playerId:string,recipientId:string,expence:string,balance:string,reason:string):void
   {
     this.i("進入writePayLog，撰寫PayLog");
-    const time = sd.format(new Date(), 'YYYY/MM/DD HH:mm:ss');
+    const time = DateTime.now().toFormat('yyyy/MM/dd HH:mm:ss');
     const logMessage = `時間: [${time}]，轉帳ID: [${playerId}]，被轉帳人ID: [${recipientId}]，費用: [$${expence}元]，餘額: [$${balance}元]，理由: [${reason}]\r\n`;
 
     if (fs.existsSync(`./pay_logs/logs.txt`)) 
